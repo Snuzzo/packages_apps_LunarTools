@@ -4,6 +4,10 @@
 # Kludgy hack to help with kernels
 boot=$(grep -i "boot" /proc/emmc | sed 's/.*boot\(.*\)<\/recovery.*/\1/' | sed 's/:[^:]*$//')
 recovery=$(grep -i "recovery" /proc/emmc | sed 's/.*boot\(.*\)<\/recovery.*/\1/' | sed 's/:[^:]*$//')
+DATE=$(date +"%m%d%y")
+if [ ! -d "/sdcard/lunar" ]; then
+mkdir /sdcard/lunar
+fi
 cd /sdcard/lunar
 echo
 echo "1) Flash a previously saved boot.img"
@@ -140,7 +144,7 @@ read menu
 					sleep 1
 					echo "1"
 					sleep 1
-					dd if=/dev/block/$recovery of=/sdcard/lunar/recovery_backup.img
+					dd if=/dev/block/$recovery of=/sdcard/lunar/recovery_backup_$DATE.img
 					echo "Your current recovery was saved to SDCard/Lunar dir as recovery_backup.img"
 					dd if=$file_chosen of=/dev/block/$recovery
 					echo "Please Reboot to recovery....."
