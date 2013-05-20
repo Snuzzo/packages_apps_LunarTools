@@ -4,6 +4,8 @@
 # Kludgy hack to help with kernels
 boot=$(grep -i "boot" /proc/emmc | sed 's/.*boot\(.*\)<\/recovery.*/\1/' | sed 's/:[^:]*$//')
 recovery=$(grep -i "recovery" /proc/emmc | sed 's/.*boot\(.*\)<\/recovery.*/\1/' | sed 's/:[^:]*$//')
+#Let's not rely on static values, we will get them from emmc hardware instead
+
 DATE=$(date +"%m%d%y")
 if [ ! -d "/sdcard/lunar" ]; then
 mkdir /sdcard/lunar
