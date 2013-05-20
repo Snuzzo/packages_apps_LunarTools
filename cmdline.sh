@@ -2,6 +2,10 @@
 #
 # 
 # Kludgy hack to help with kernels
+boot=$(grep -i "boot" /proc/emmc | sed 's/.*boot\(.*\)<\/recovery.*/\1/' | sed 's/:[^:]*$//')
+recovery=$(grep -i "recovery" /proc/emmc | sed 's/.*boot\(.*\)<\/recovery.*/\1/' | sed 's/:[^:]*$//')
+hardware=$(cat /proc/cmdline | sed "s/.*hardware=//" | cut -d" " -f1)
+#Let's not rely on static values, we will get them from emmc hardware instead
 clear
 echo "Max CPU Clock selection:" 
 echo
@@ -239,15 +243,18 @@ read confirm
 			clear
 			cd /sdcard
 			if [ ! -d "/temp" ]; then
+			#-- Checking if temp exists if not we will create it
 			mkdir temp
 			fi
 			cd temp
-			dd if=/dev/block/mmcblk0p22 of=/sdcard/temp/tempboot.img
+			dd if=/dev/block/$boot of=/sdcard/temp/tempboot.img
+			#-- The next line is dependent on the placement of abootimg
 			/sbin/abootimg -x /sdcard/temp/tempboot.img
 			sed -i '/cmdline = / d' bootimg.cfg
-			echo "cmdline = console=ttyHSL3 androidboot.hardware=vigor no_console_suspend=1 gov="$gov "maxkhz="$maxkhz "minkhz="$minkhz "scheduler="$scheduler "maxscroff="$maxscroff "s2w="$s2w"" >> bootimg.cfg
+			echo "cmdline = console=ttyHSL3 androidboot.hardware="$hardware" no_console_suspend=1 gov="$gov "maxkhz="$maxkhz "minkhz="$minkhz "scheduler="$scheduler "maxscroff="$maxscroff "s2w="$s2w"" >> bootimg.cfg
+			#-- The next line is dependent on the placement of abootimg
 			/sbin/abootimg -u /sdcard/temp/tempboot.img -f /sdcard/temp/bootimg.cfg
-			dd if=/sdcard/temp/tempboot.img of=/dev/block/mmcblk0p22
+			dd if=/sdcard/temp/tempboot.img of=/dev/block/$boot
 			rm bootimg.cfg
 			rm initrd.img
 			rm zImage
@@ -270,10 +277,12 @@ read confirm
 			mkdir temp
 			fi
 			cd temp
-			dd if=/dev/block/mmcblk0p22 of=/sdcard/temp/tempboot.img
+			dd if=/dev/block/$boot of=/sdcard/temp/tempboot.img
+			#-- The next line is dependent on the placement of abootimg
 			/sbin/abootimg -x /sdcard/temp/tempboot.img
 			sed -i '/cmdline = / d' bootimg.cfg
-			echo "cmdline = console=ttyHSL3 androidboot.hardware=vigor no_console_suspend=1 gov="$gov "maxkhz="$maxkhz "minkhz="$minkhz "scheduler="$scheduler "maxscroff="$maxscroff "s2w="$s2w"" >> bootimg.cfg
+			echo "cmdline = console=ttyHSL3 androidboot.hardware="$hardware" no_console_suspend=1 gov="$gov "maxkhz="$maxkhz "minkhz="$minkhz "scheduler="$scheduler "maxscroff="$maxscroff "s2w="$s2w"" >> bootimg.cfg
+			#-- The next line is dependent on the placement of abootimg
 			/sbin/abootimg -u /sdcard/temp/tempboot.img -f /sdcard/temp/bootimg.cfg
 			rm bootimg.cfg
 			rm initrd.img
