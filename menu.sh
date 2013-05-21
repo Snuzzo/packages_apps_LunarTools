@@ -135,6 +135,22 @@ read menu
 			read confirm
 			case "$confirm" in
 				"1")
+					echo "Backup current recovery?"
+					echo "1) Yes"
+					echo "2) No"
+					read backup
+					case "$backup" in
+						"1")
+							echo "Input name of recovery backup [Aa-Zz|0-9]:"
+							read recoverybackup
+							dd if=/dev/block/$recovery of=/sdcard/lunar/$recoverybackup_$DATE.img
+							echo "Your current recovery was saved to SDCard/Lunar dir as $recoverybackup_$DATE.img"
+							;;
+						"2")
+							echo "Skipping creation of a recovery backup"
+							;;
+					esac
+					$backup
 					echo "Flashing selection in ..."
 					echo "5"
 					sleep 1
@@ -146,8 +162,6 @@ read menu
 					sleep 1
 					echo "1"
 					sleep 1
-					dd if=/dev/block/$recovery of=/sdcard/lunar/recovery_backup_$DATE.img
-					echo "Your current recovery was saved to SDCard/Lunar dir as recovery_backup.img"
 					dd if=$file_chosen of=/dev/block/$recovery
 					echo "Please Reboot to recovery....."
 					echo ".... and Wipe Dalvik Cache & Cache"
