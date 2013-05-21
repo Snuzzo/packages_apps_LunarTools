@@ -74,6 +74,7 @@ read menu
 					echo "Please Reboot to recovery....."
 					echo ".... and Wipe Dalvik Cache & Cache"
 					echo "GoodBye!"
+					exit
 					;;
 				"2")
 					echo "Fine, I will be here when you get back :)"
@@ -166,6 +167,7 @@ read menu
 					echo "Please Reboot to recovery....."
 					echo ".... and Wipe Dalvik Cache & Cache"
 					echo "GoodBye!"
+					exit
 					;;
 				"2")
 					echo "Fine, I will be here when you get back :)"
@@ -185,9 +187,9 @@ read menu
 					;;
 			esac
 			$confirm
-                        ;;
+			;;
 		"99")
 			exit
-                        ;;
+			;;
         esac
 $menu
