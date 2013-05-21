@@ -144,8 +144,8 @@ read menu
 						"1")
 							echo "Input name of recovery backup [Aa-Zz|0-9]:"
 							read recoverybackup
-							dd if=/dev/block/$recovery of=/sdcard/lunar/$recoverybackup_$DATE.img
-							echo "Your current recovery was saved to SDCard/Lunar dir as $recoverybackup_$DATE.img"
+							dd if=/dev/block/$recovery of=/sdcard/lunar/recovery_$recoverybackup_$DATE.img
+							echo "Your current recovery was saved to SDCard/Lunar dir as recovery_$recoverybackup_$DATE.img"
 							;;
 						"2")
 							echo "Skipping creation of a recovery backup"
