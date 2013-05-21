@@ -7,10 +7,10 @@ recovery=$(grep -i "recovery" /proc/emmc | sed 's/.*boot\(.*\)<\/recovery.*/\1/'
 #Let's not rely on static values, we will get them from emmc hardware instead
 
 DATE=$(date +"%m%d%y")
-if [ ! -d "/sdcard/lunar" ]; then
-mkdir /sdcard/lunar
+if [ ! -d "/sdcard2/lunar" ]; then
+mkdir /sdcard2/lunar
 fi
-cd /sdcard/lunar
+cd /sdcard2/lunar
 echo
 echo "1) Flash a previously saved boot.img"
 echo "2) Flash a recovery.img"
@@ -144,7 +144,7 @@ read menu
 						"1")
 							echo "Input name of recovery backup [Aa-Zz|0-9]:"
 							read recoverybackup
-							dd if=/dev/block/$recovery of=/sdcard/lunar/recovery_$recoverybackup_$DATE.img
+							dd if=/dev/block/$recovery of=/sdcard2/lunar/recovery_$recoverybackup_$DATE.img
 							echo "Your current recovery was saved to SDCard/Lunar dir as recovery_$recoverybackup_$DATE.img"
 							;;
 						"2")
