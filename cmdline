@@ -198,14 +198,14 @@ read confirm
 	case "$confirm" in
 		"1")
 			clear
-			cd /sdcard
+			cd /sdcard2
 			if [ ! -d "/temp" ]; then
 			#-- Checking if temp exists if not we will create it
 			mkdir temp
 			fi
 			cd temp
-			dd if=/dev/block/$boot of=/sdcard/temp/tempboot.img
-			abootimg -x /sdcard/temp/tempboot.img
+			dd if=/dev/block/$boot of=/sdcard2/temp/tempboot.img
+			abootimg -x /sdcard2/temp/tempboot.img
 			size1=$(stat -c %s zImage)
 			size2=$(stat -c %s initrd.img)
 			size=$(($size1 + $size2 + 1048576))
@@ -213,32 +213,32 @@ read confirm
 			sed -i '/cmdline = / d' bootimg.cfg
 			sed -i "s/bootsize.*/bootsize = 0x$hexsize/g" bootimg.cfg
 			echo "cmdline = console=ttyHSL3 androidboot.hardware="$hardware" no_console_suspend=1 gov="$gov "maxkhz="$maxkhz "minkhz="$minkhz "scheduler="$scheduler "maxscroff="$maxscroff "s2w="$s2w"" >> bootimg.cfg
-			abootimg -u /sdcard/temp/tempboot.img -f /sdcard/temp/bootimg.cfg
-			dd if=/sdcard/temp/tempboot.img of=/dev/block/$boot
+			abootimg -u /sdcard2/temp/tempboot.img -f /sdcard2/temp/bootimg.cfg
+			dd if=/sdcard2/temp/tempboot.img of=/dev/block/$boot
 			rm bootimg.cfg
 			rm initrd.img
 			rm zImage
-			if [ ! -d "/sdcard/lunar" ]; then
-			mkdir /sdcard/lunar
+			if [ ! -d "/sdcard2/lunar" ]; then
+			mkdir /sdcard2/lunar
 			fi
-			if [ ! -e /sdcard/lunar/boot_"$maxkhz2"_"$minkhz2"_"$maxscroff2"_"$gov"_"$scheduler"_s2w"$s2w2".img ]; then
-			mv /sdcard/temp/tempboot.img /sdcard/lunar/boot_"$maxkhz2"_"$minkhz2"_"$maxscroff2"_"$gov"_"$scheduler"_s2w"$s2w2".img
+			if [ ! -e /sdcard2/lunar/boot_"$maxkhz2"_"$minkhz2"_"$maxscroff2"_"$gov"_"$scheduler"_s2w"$s2w2".img ]; then
+			mv /sdcard2/temp/tempboot.img /sdcard2/lunar/boot_"$maxkhz2"_"$minkhz2"_"$maxscroff2"_"$gov"_"$scheduler"_s2w"$s2w2".img
 			echo "Flashed new boot and created at"
-			echo "/sdcard/lunar/boot_"$maxkhz2"_"$minkhz2"_"$maxscroff2"_"$gov"_"$scheduler"_s2w"$s2w2".img"
+			echo "/sdcard2/lunar/boot_"$maxkhz2"_"$minkhz2"_"$maxscroff2"_"$gov"_"$scheduler"_s2w"$s2w2".img"
 			else
-			echo "Configuration already exists; aborting copy to /sdcard/lunar"
+			echo "Configuration already exists; aborting copy to /sdcard2/lunar"
 			rm tempboot.img
 			fi
 			;;
                 "2")
 			echo "Aborted flash!"
-			cd /sdcard
+			cd /sdcard2
 			if [ ! -d "/temp" ]; then
 			mkdir temp
 			fi
 			cd temp
-			dd if=/dev/block/$boot of=/sdcard/temp/tempboot.img
-			abootimg -x /sdcard/temp/tempboot.img
+			dd if=/dev/block/$boot of=/sdcard2/temp/tempboot.img
+			abootimg -x /sdcard2/temp/tempboot.img
 			size1=$(stat -c %s zImage)
 			size2=$(stat -c %s initrd.img)
 			size=$(($size1 + $size2 + 1048576))
@@ -246,20 +246,20 @@ read confirm
 			sed -i '/cmdline = / d' bootimg.cfg
 			sed -i "s/bootsize.*/bootsize = 0x$hexsize/g" bootimg.cfg
 			echo "cmdline = console=ttyHSL3 androidboot.hardware="$hardware" no_console_suspend=1 gov="$gov "maxkhz="$maxkhz "minkhz="$minkhz "scheduler="$scheduler "maxscroff="$maxscroff "s2w="$s2w"" >> bootimg.cfg
-			abootimg -u /sdcard/temp/tempboot.img -f /sdcard/temp/bootimg.cfg
+			abootimg -u /sdcard2/temp/tempboot.img -f /sdcard2/temp/bootimg.cfg
 			rm bootimg.cfg
 			rm initrd.img
 			rm zImage
-			if [ ! -d "/sdcard/lunar" ]; then
-			mkdir /sdcard/lunar
+			if [ ! -d "/sdcard2/lunar" ]; then
+			mkdir /sdcard2/lunar
 			fi
-			if [ ! -e /sdcard/lunar/boot_"$maxkhz2"_"$minkhz2"_"$maxscroff2"_"$gov"_"$scheduler"_s2w"$s2w2".img ]; then
-			mv /sdcard/temp/tempboot.img /sdcard/lunar/boot_"$maxkhz2"_"$minkhz2"_"$maxscroff2"_"$gov"_"$scheduler"_s2w"$s2w2".img
+			if [ ! -e /sdcard2/lunar/boot_"$maxkhz2"_"$minkhz2"_"$maxscroff2"_"$gov"_"$scheduler"_s2w"$s2w2".img ]; then
+			mv /sdcard2/temp/tempboot.img /sdcard2/lunar/boot_"$maxkhz2"_"$minkhz2"_"$maxscroff2"_"$gov"_"$scheduler"_s2w"$s2w2".img
 			echo "I just saved your boot LOL"
-			echo "It is saved here /sdcard/lunar/boot_"$maxkhz2"_"$minkhz2"_"$maxscroff2"_"$gov"_"$scheduler"_s2w"$s2w2".img"
+			echo "It is saved here /sdcard2/lunar/boot_"$maxkhz2"_"$minkhz2"_"$maxscroff2"_"$gov"_"$scheduler"_s2w"$s2w2".img"
 			echo "Run 'sh /sbin/menu.sh' to flash"
 			else
-			echo "Configuration already exists; aborting copy to /sdcard/lunar"
+			echo "Configuration already exists; aborting copy to /sdcard2/lunar"
 			rm tempboot.img
 			fi
 			echo "Come back soon!"
