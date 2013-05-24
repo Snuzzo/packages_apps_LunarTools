@@ -5,10 +5,22 @@
 boot=$(grep -i "boot" /proc/emmc | sed 's/.*boot\(.*\)<\/recovery.*/\1/' | sed 's/:[^:]*$//')
 recovery=$(grep -i "recovery" /proc/emmc | sed 's/.*boot\(.*\)<\/recovery.*/\1/' | sed 's/:[^:]*$//')
 #Let's not rely on static values, we will get them from emmc hardware instead
-
 DATE=$(date +"%m%d%y")
-echo "Enter name of current rom [Aa-Zz|0-9]:"
+clear
+echo "Loading"
+sleep 1
+clear
+echo "Loading ."
+sleep 1
+clear
+echo "Loading . ."
+sleep 1
+clear
+echo "Loading . . ."
+sleep 1
+clear
 echo "NO SPACES or Special characters"
+echo "Enter name of current rom [Aa-Zz|0-9]:"
 read currentrom
 if [ ! -d "/sdcard2/lunar" ]; then
 mkdir /sdcard2/lunar
@@ -193,11 +205,12 @@ read menu
 			$confirm
 			;;
 		"3")
-			cd /sdcard2/
+			cd /sdcard2/			
 			grep_cmd1=`find -name Funky-Kernel* | grep -i \\.zip$`
+			grep_cmd2=`find -name Funky_Sense* | grep -i \\.zip$`
 			cd /sdcard2/lunar
-			grep_cmd2=`find zimage*`
-			grep_cmd=`echo $grep_cmd1 $grep_cmd2`
+			grep_cmd3=`find zimage*`
+			grep_cmd=`echo $grep_cmd1 $grep_cmd2 $grep_cmd3`
 			echo "zImages found:" 
 			echo
 			for filename in $grep_cmd 
@@ -283,14 +296,26 @@ read menu
 					#-- The next line is dependent on the placement of abootimg
 					cd /sdcard2/lunar
 					if [[ $file_chosen == *.zip ]]; then
+					size1=$(stat -c %s $zimage)
+					else
+					size1=$(stat -c %s $file_chosen)
+					fi
+					if [[ $file_chosen == *.zip ]]; then
 					abootimg -u /sdcard2/temp/tempboot.img -k $zimage > /dev/null
 					else
 					abootimg -u /sdcard2/temp/tempboot.img -k $file_chosen > /dev/null
 					fi
+					size2=$(stat -c %s /sdcard2/lunar/initrd.img)
+					size=$(($size1 + $size2 + 1048576))
+					printf -v hexsize "%x" "$size"
+					sed -i "s/bootsize.*/bootsize = 0x$hexsize/g" /sdcard2/lunar/bootimg.cfg
+					abootimg -u /sdcard2/temp/tempboot.img -f /sdcard2/lunar/bootimg.cfg > /dev/null
 					cd /sdcard2/temp
 					dd if=/sdcard2/temp/tempboot.img of=/dev/block/$boot 2>/dev/null
 					dd if=/dev/block/$boot of=/sdcard2/temp/tempboot.img 2>/dev/null
 					abootimg -x /sdcard2/temp/tempboot.img > /dev/null
+					sed -i "s/bootsize.*/bootsize = 0x$hexsize/g" bootimg.cfg
+					abootimg -u /sdcard2/temp/tempboot.img -f bootimg.cfg > /dev/null
 					sum3=$(sha1sum zImage | cut -d ' ' -f 1)
 					if [[ $file_chosen == *.zip ]]; then
 					echo "New zImage sha1sum is $sum1"
