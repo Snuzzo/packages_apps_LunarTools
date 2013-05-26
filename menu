@@ -24,22 +24,22 @@ mkdir /sdcard2/lunar
 fi
 cd /sdcard2/lunar
 if [ ! -e "/sdcard2/lunar/currentromconfig" ]; then
-echo "Enter name of current rom:"
+echo "NO SPACES or Special characters"
+echo "Enter name of current rom [Aa-Zz|0-9]:"
 read currentrom
-currentrom=$(echo "'"$currentrom"'" | tr A-Z a-z | sed -e 's/[^a-zA-Z0-9\-]/_/g')
 echo 'currentrom='"$currentrom" > currentromconfig
 else
 . /sdcard2/lunar/currentromconfig
 echo "Current rom is set to $currentrom"
-echo "is this correct? Press[Yy = yes | Any other to modify]"
+echo "is this correct?[Yy = yes | Any other to modify]"
 read -n1 configconfirm
 echo
 if [[ "$configconfirm" == "Y" ||  "$configconfirm" == "y" ]]; then
 continue
 else
+echo "NO SPACES or Special characters"
 echo "Enter name of current rom [Aa-Zz|0-9]:"
 read currentrom
-currentrom=$(echo "'"$currentrom"'" | tr A-Z a-z | sed -e 's/[^a-zA-Z0-9\-]/_/g')
 echo 'currentrom='"$currentrom" > currentromconfig
 fi
 fi
@@ -181,7 +181,6 @@ read menu
 						"1")
 							echo "Input name of recovery backup [Aa-Zz|0-9]:"
 							read recoverybackup
-							recoverybackup=$(echo "'"$recoverybackup"'" | tr A-Z a-z | sed -e 's/[^a-zA-Z0-9\-]/_/g')
 							dd if=/dev/block/$recovery of=/sdcard2/lunar/recovery_$recoverybackup_$DATE.img 2>> lunardebug.log
 							echo "Your current recovery was saved to SDCard/Lunar dir as recovery_$recoverybackup_$DATE.img"
 							;;
