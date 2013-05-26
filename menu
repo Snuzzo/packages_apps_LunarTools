@@ -27,7 +27,7 @@ if [ ! -e "/sdcard2/lunar/currentromconfig" ]; then
 echo "Enter name of current rom:"
 read currentrom
 currentrom=$(echo "'"$currentrom"'" | tr A-Z a-z | sed -e 's/[^a-zA-Z0-9\-]/_/g')
-echo 'currentrom='"$currentrom" >> currentromconfig
+echo 'currentrom='"$currentrom" > currentromconfig
 else
 . /sdcard2/lunar/currentromconfig
 echo "Current rom is set to $currentrom"
@@ -40,8 +40,10 @@ else
 echo "Enter name of current rom [Aa-Zz|0-9]:"
 read currentrom
 currentrom=$(echo "'"$currentrom"'" | tr A-Z a-z | sed -e 's/[^a-zA-Z0-9\-]/_/g')
+echo 'currentrom='"$currentrom" > currentromconfig
 fi
 fi
+. /sdcard2/lunar/currentromconfig
 echo $currentrom > lunardebug.log
 echo
 echo "1) Flash a previously saved boot.img from cmdline script"
