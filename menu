@@ -6,6 +6,7 @@ boot=$(grep -i "boot" /proc/emmc | sed 's/.*boot\(.*\)<\/recovery.*/\1/' | sed '
 recovery=$(grep -i "recovery" /proc/emmc | sed 's/.*boot\(.*\)<\/recovery.*/\1/' | sed 's/:[^:]*$//')
 #Let's not rely on static values, we will get them from emmc hardware instead
 DATE=$(date +"%m%d%y")
+currentrom=$(cat /sdcard2/lunar/currentromconfig)
 clear
 echo "Loading"
 sleep 1
@@ -23,28 +24,32 @@ if [ ! -d "/sdcard2/lunar" ]; then
 mkdir /sdcard2/lunar
 fi
 cd /sdcard2/lunar
-if [ ! -e "/sdcard2/lunar/currentromconfig" ]; then
+if [ ! -e /sdcard2/lunar/currentromconfig ]; then
 echo "NO SPACES or Special characters"
-echo "Enter name of current rom [Aa-Zz|0-9]:"
+echo "Enter name of current rom [Aa-Zz|0-9] then press [ENTER]:"
 read currentrom
-echo 'currentrom='"$currentrom" > currentromconfig
-else
-. /sdcard2/lunar/currentromconfig
+echo "$currentrom" > currentromconfig
+fi
+if [ -e /sdcard2/lunar/currentromconfig ]; then
 echo "Current rom is set to $currentrom"
-echo "is this correct?[Yy = yes | Any other to modify]"
-read -n1 configconfirm
+echo "is this correct?[Yy = yes other to modify | Any key = No ]then press [ENTER]"
+read configconfirm
+echo $configconfirm > lunardebug.log
 echo
-if [[ "$configconfirm" == "Y" ||  "$configconfirm" == "y" ]]; then
-continue
-else
+if [ "$configconfirm" -ne "y" ]; then
 echo "NO SPACES or Special characters"
-echo "Enter name of current rom [Aa-Zz|0-9]:"
+echo "Enter name of current rom: [Aa-Zz|0-9] then press [ENTER]"
 read currentrom
-echo 'currentrom='"$currentrom" > currentromconfig
+echo "$currentrom" > currentromconfig
+fi
+if [ "$configconfirm" -ne "Y" ]; then
+echo "NO SPACES or Special characters"
+echo "Enter name of current rom: [Aa-Zz|0-9] then press [ENTER]"
+read currentrom
+echo "$currentrom" > currentromconfig
 fi
 fi
-. /sdcard2/lunar/currentromconfig
-echo $currentrom > lunardebug.log
+echo $currentrom >> lunardebug.log
 echo
 echo "1) Flash a previously saved boot.img from cmdline script"
 echo "2) Flash a recovery.img"
@@ -55,7 +60,10 @@ echo "Choose number selection[99 = abort]:"
 read menu
         case "$menu" in
                 "1")
-			grep_cmd=`find ./boot* | grep -i \\.img$`
+			echo "1) Flash a previously saved boot.img from cmdline script" >> lunardebug.log
+			grep_cmd1=`find ./boot* | grep -i \\.img$`
+			grep_cmd2=`find *.cfg`
+			grep_cmd=`echo $grep_cmd1 $grep_cmd2`
 			echo "Previous configurations:" 
 			echo
 			for filename in $grep_cmd 
@@ -106,10 +114,28 @@ read menu
 					sleep 1
 					echo "1"
 					sleep 1
-					echo "recovery flashing chosen" >> lunardebug.log
+					echo "$file_chosen chosen" >> lunardebug.log
+					if [[ $file_chosen == *.cfg ]]; then
+					dd if=/dev/block/$boot of=/sdcard2/lunar/tempboot.img 2>> lunardebug.log
+					abootimg -x /sdcard2/lunar/tempboot.img >> lunardebug.log
+					sed -i -e "s/gov.*//g" bootimg.cfg
+					file_chosen=$(cat $file_chosen)
+					sed -i -e "$ s/$/$file_chosen/g" bootimg.cfg
+					cat bootimg.cfg >> lunardebug.log
+					abootimg -u tempboot.img -f bootimg.cfg >> lunardebug.log
+					dd if=/sdcard2/lunar/tempboot.img of=/dev/block/$boot 2>> lunardebug.log
+					rm bootimg.cfg
+					rm initrd.img
+					rm zImage
+					rm tempboot.img
+					fi
+					if [[ $file_chosen == *.img ]]; then
 					dd if=$file_chosen of=/dev/block/$boot 2>> lunardebug.log
-					echo "Please Reboot to recovery....."
-					echo ".... and Wipe Dalvik Cache & Cache"
+					fi
+					rm /data/dalvik-cache/*
+					echo "Rebooting to recovery....."
+					echo ".... to wipe Dalvik Cache & Cache"
+					echo "--wipe_cache" >> /cache/recovery/command
 					echo "GoodBye!"
 					reboot recovery
 					;;
@@ -133,6 +159,7 @@ read menu
 		$confirm
 		;;
                 "2")
+			echo "2) Flash a recovery.img" >> lunardebug.log
 			grep_cmd=`find ./recovery* | grep -i \\.img$`
 			echo "Recoveries found:" 
 			echo
@@ -236,6 +263,7 @@ read menu
 			$confirm
 			;;
 		"3")
+			echo "3) Update current kernel with an AnyKernel zImage" >> lunardebug.log
 			grep_cmd1=`find *.zip`
 			grep_cmd2=`find zimage*`
 			grep_cmd=`echo $grep_cmd1 $grep_cmd2`
@@ -415,6 +443,7 @@ read menu
 		$confirm
 		;;
 		"4")
+			echo "4) Flash boot.img from zip and auto-reboot to recovery" >> lunardebug.log
 			grep_cmd=`find *.zip`
 			echo "Previous configurations:" 
 			echo
@@ -470,7 +499,7 @@ read menu
 					dd if=/sdcard2/lunar/boot.img of=/dev/block/$boot 2>> lunardebug.log
 					rm boot.img
 					echo "Rebooting to recovery....."
-					echo "... and finish flashing $file_chosen"
+					echo "... Please finish flashing $file_chosen"
 					echo "GoodBye!"
 					reboot recovery
 					;;

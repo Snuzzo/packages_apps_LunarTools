@@ -28,12 +28,7 @@ if [ "$input" -gt "$line_counter" ];then
 echo "Invalid selection: Aborting script"
 exit
 fi
-cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies | sed -e 's/\s\s*/\n/g' | sed 's/ //g' | sed '$d' | tail -n 5 > /sdcard/temp1
-cat /sdcard/temp1 | sed -e 's/\s\s*/\n/g' | sed 's/ //g' | sed -e 's/^//'| sed -e 's/^/=/' | sed 's/$//g' > /sdcard/temp2
-cat -n /sdcard/temp2 | sed 's/ //g' | sed 's/[[:space:]]//g' | sed 's/^//' > /sdcard/temp1
-grep $input"=" /sdcard/temp1 > /sdcard/temp2
-sed -i -e 's/'$input'=//' /sdcard/temp2
-maxkhz=$(cat /sdcard/temp2)
+maxkhz=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies | sed -e 's/\s\s*/\n/g' | sed '$d' | sed 's/ //g' | tail -n 5 | head -n$input | tail -n1)
 clear
 echo "Min CPU Clock selection:"
 echo 
@@ -56,12 +51,7 @@ if [ "$input" -gt "$line_counter" ];then
 echo "Invalid selection: Aborting script"
 exit
 fi
-cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies | sed -e 's/\s\s*/\n/g' | sed 's/ //g' | sed '$d' | head -n 4 > /sdcard/temp1
-cat /sdcard/temp1 | sed -e 's/\s\s*/\n/g' | sed 's/ //g' | sed -e 's/^//'| sed -e 's/^/=/' | sed 's/$//g' > /sdcard/temp2
-cat -n /sdcard/temp2 | sed 's/ //g' | sed 's/[[:space:]]//g' | sed 's/^//' > /sdcard/temp1
-grep $input"=" /sdcard/temp1 > /sdcard/temp2
-sed -i -e 's/'$input'=//' /sdcard/temp2
-minkhz=$(cat /sdcard/temp2)
+minkhz=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies | sed -e 's/\s\s*/\n/g' | sed '$d' | sed 's/ //g' | head -n 4 | head -n$input | tail -n1)
 clear
 echo "Max Screen Off CPU Clock selection:" 
 echo 
@@ -84,16 +74,11 @@ if [ "$input" -gt "$line_counter" ];then
 echo "Invalid selection: Aborting script"
 exit
 fi
-cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies | sed -e 's/\s\s*/\n/g' | sed 's/ //g' | sed '$d' | tail -n+5 | head -n 8 > /sdcard/temp1
-cat /sdcard/temp1 | sed -e 's/\s\s*/\n/g' | sed 's/ //g' | sed -e 's/^//'| sed -e 's/^/=/' | sed 's/$//g' > /sdcard/temp2
-cat -n /sdcard/temp2 | sed 's/ //g' | sed 's/[[:space:]]//g' | sed 's/^//' > /sdcard/temp1
-grep $input"=" /sdcard/temp1 > /sdcard/temp2
-sed -i -e 's/'$input'=//' /sdcard/temp2
-maxscroff=$(cat /sdcard/temp2)
+maxscroff=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies | sed -e 's/\s\s*/\n/g' | sed '$d' | sed 's/ //g' | tail -n+5 | head -n 8 | head -n$input | tail -n1)
 clear
 echo "Governor selection:"
 echo
-governors=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors | sed -e 's/\s\s*/\n/g' | sed 's/ //g')
+governors=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors | sed -e 's/\s\s*/\n/g' | sed 's/ //g' | sed '$d')
 # Load text file lines into a bash array & print as a menu.
 OLD_IFS=$IFS
 IFS=$'\n'
@@ -112,15 +97,7 @@ if [ "$input" -gt "$line_counter" ];then
 echo "Invalid selection: Aborting script"
 exit
 fi
-# Build the array as a readable file for parsing
-cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors > /sdcard/temp1
-cat /sdcard/temp1 | sed -e 's/\s\s*/\n/g' | sed 's/ //g' | sed -e 's/^//'| sed -e 's/^/=/' | sed 's/$//g' > /sdcard/temp2
-cat /sdcard/temp2 | sed '$d' > /sdcard/temp1
-cat -n /sdcard/temp1 | sed 's/ //g' | sed 's/[[:space:]]//g' | sed 's/^//' > /sdcard/temp2
-grep $input"=" /sdcard/temp2 > /sdcard/temp1
-sed -i -e 's/'$input'=//' /sdcard/temp1
-# Chosen governor is now parsed let's make it usable
-gov=$(cat /sdcard/temp1)
+gov=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors  | sed -e 's/\s\s*/\n/g' | sed 's/ //g' | sed '$d' | head -n$input | tail -n1)
 clear
 echo "IO Scheduler selection:"
 echo 
@@ -143,12 +120,7 @@ if [ "$input" -gt "$line_counter" ];then
 echo "Invalid selection: Aborting script"
 exit
 fi
-cat /sys/block/mmcblk0/queue/scheduler | sed 's/[[]//g' | sed 's/[]]//g' | sed -e 's/\s\s*/\n/g' | sed '$d' | sed 's/ //g' > /sdcard/temp1
-cat /sdcard/temp1 | sed -e 's/\s\s*/\n/g' | sed 's/ //g' | sed -e 's/^//'| sed -e 's/^/=/' | sed 's/$//g' > /sdcard/temp2
-cat -n /sdcard/temp2 | sed 's/ //g' | sed 's/[[:space:]]//g' | sed 's/^//' > /sdcard/temp1
-grep $input"=" /sdcard/temp1 > /sdcard/temp2
-sed -i -e 's/'$input'=//' /sdcard/temp2
-scheduler=$(cat /sdcard/temp2)
+scheduler=$(cat /sys/block/mmcblk0/queue/scheduler | sed 's/[[]//g' | sed 's/[]]//g' | sed -e 's/\s\s*/\n/g' | sed '$d' | sed 's/ //g' | head -n$input | tail -n1)
 clear
 echo "Sweep2Wake selection:"
 echo 
@@ -164,11 +136,11 @@ read s2w
                         ;;
                 "1")
                         s2w=0
-			s2w2=disabled
+			s2w2=off
                         ;;
                 "2")
                         s2w=1
-			s2w2=withlights
+			s2w2=lights
                         ;;
                 "3")
                         s2w=2
@@ -183,11 +155,9 @@ echo "Invalid selection: Aborting script"
 exit
 fi
 clear
-maxkhz2=$(echo $maxkhz | sed '$s/000/mhz/')
-minkhz2=$(echo $minkhz | sed '$s/000/mhz/')
-maxscroff2=$(echo $maxscroff | sed '$s/000/mhz/')
-rm /sdcard/temp1
-rm /sdcard/temp2
+maxkhz2=$(echo $maxkhz | sed '$s/000$/mhz/')
+minkhz2=$(echo $minkhz | sed '$s/000$/mhz/')
+maxscroff2=$(echo $maxscroff | sed '$s/000$/mhz/')
 echo "Last chance before we flash" 
 echo "Options chosen are $maxkhz2 $minkhz2 $maxscroff2 $gov $scheduler S2w $s2w2"
 echo 
@@ -221,14 +191,23 @@ read confirm
 			if [ ! -d "/sdcard2/lunar" ]; then
 			mkdir /sdcard2/lunar
 			fi
-			if [ ! -e /sdcard2/lunar/boot_"$maxkhz2"_"$minkhz2"_"$maxscroff2"_"$gov"_"$scheduler"_s2w"$s2w2".img ]; then
-			mv /sdcard2/temp/tempboot.img /sdcard2/lunar/boot_"$maxkhz2"_"$minkhz2"_"$maxscroff2"_"$gov"_"$scheduler"_s2w"$s2w2".img
-			echo "Flashed new boot and created at"
-			echo "/sdcard2/lunar/boot_"$maxkhz2"_"$minkhz2"_"$maxscroff2"_"$gov"_"$scheduler"_s2w"$s2w2".img"
+			if [ ! -e /sdcard2/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2".cfg ]; then
+			echo "gov="$gov "maxkhz="$maxkhz "minkhz="$minkhz "scheduler="$scheduler "maxscroff="$maxscroff "s2w="$s2w"" >> /sdcard2/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2".cfg
+			echo "Flashed new boot and created .cfg at"
+			echo "/sdcard2/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2".cfg"
 			else
 			echo "Configuration already exists; aborting copy to /sdcard2/lunar"
-			rm tempboot.img
 			fi
+			rm tempboot.img
+			rm /sdcard2/lunar/bootimg.cfg
+			rm /sdcard2/lunar/initrd.img
+			rm /sdcard2/lunar/zImage
+			rm /data/dalvik-cache/*
+			echo "Rebooting to recovery....."
+			echo ".... to wipe Dalvik Cache & Cache"
+			echo "--wipe_cache" >> /cache/recovery/command
+			echo "GoodBye!"
+			reboot recovery
 			;;
                 "2")
 			echo "Aborted flash!"
@@ -263,7 +242,6 @@ read confirm
 			rm tempboot.img
 			fi
 			echo "Come back soon!"
-			exit
                         ;;
 	esac
 $confirm
