@@ -4,7 +4,7 @@
 # Kludgy hack to help with kernels
 boot=$(grep -i "boot" /proc/emmc | sed 's/.*boot\(.*\)<\/recovery.*/\1/' | sed 's/:[^:]*$//')
 recovery=$(grep -i "recovery" /proc/emmc | sed 's/.*boot\(.*\)<\/recovery.*/\1/' | sed 's/:[^:]*$//')
-hardware=$(cat /proc/cmdline | sed "s/.*hardware=//" | cut -d" " -f1)
+hardware=$(grep -i "board=" /system/build.prop | sed "s/.*board=//" | cut -d" " -f1)
 #Let's not rely on static values, we will get them from emmc hardware instead
 clear
 echo "Max CPU Clock selection:"
