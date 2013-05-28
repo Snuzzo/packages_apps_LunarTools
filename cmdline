@@ -6,7 +6,32 @@ boot=$(grep -i "boot" /proc/emmc | sed 's/.*boot\(.*\)<\/recovery.*/\1/' | sed '
 recovery=$(grep -i "recovery" /proc/emmc | sed 's/.*boot\(.*\)<\/recovery.*/\1/' | sed 's/:[^:]*$//')
 hardware=$(grep -i "board=" /system/build.prop | sed "s/.*board=//" | cut -d" " -f1)
 #Let's not rely on static values, we will get them from emmc hardware instead
-clear
+#echo "Kernel type selection:"
+#echo 
+#echo "1) Set options via Command Line"
+#echo "2) Set options via init.d"
+#echo
+#echo "Choose number selection[0 or 99 = exit]:"
+#read kerneltype
+#if [ "$kerneltype" -gt "2" ];then
+#echo "Invalid selection: Aborting script"
+#exit
+#fi
+#	case "$kerneltype" in
+#               "0")
+#			exit
+#                       ;;
+#               "1")
+#                       kerneltype=cmdline
+#                       ;;
+#               "2")
+#                       kerneltype=initd
+#                       ;;
+#               "99")
+#			exit
+#                       ;;
+#	esac
+#clear
 echo "Max CPU Clock selection:"
 echo 
 frequencies=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies | sed 's/ /\n/g' | sed '$d' | tail -n 5)
@@ -19,8 +44,11 @@ for line in $frequencies; do
 	printf "${line_counter}) ${line}\n"
 done
 IFS=$OLD_IFS
-echo "Enter a selection [exit = 99]:"
+echo "Choose number selection[0 or 99 = exit]:"
 read input
+if [ "$input" == "0" ];then
+exit
+fi
 if [ "$input" == "99" ];then
 exit
 fi
@@ -42,8 +70,11 @@ for line in $frequencies; do
 	printf "${line_counter}) ${line}\n"
 done
 IFS=$OLD_IFS
-echo "Enter a selection [exit = 99]:"
+echo "Choose number selection[0 or 99 = exit]:"
 read input
+if [ "$input" == "0" ];then
+exit
+fi
 if [ "$input" == "99" ];then
 exit
 fi
@@ -53,6 +84,7 @@ exit
 fi
 minkhz=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies | sed 's/ /\n/g' | sed '$d' | head -n 4 | head -n$input | tail -n1)
 clear
+if [ -e /sys/devices/system/cpu/cpu0/cpufreq/screen_off_max_freq ]; then
 echo "Max Screen Off CPU Clock selection:" 
 echo 
 frequencies=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies | sed 's/ /\n/g' | sed '$d' | tail -n+5 | head -n 8)
@@ -65,8 +97,11 @@ for line in $frequencies; do
 	printf "${line_counter}) ${line}\n"
 done
 IFS=$OLD_IFS
-echo "Enter a selection [exit = 99]:"
+echo "Choose number selection[0 or 99 = exit]:"
 read input
+if [ "$input" == "0" ];then
+exit
+fi
 if [ "$input" == "99" ];then
 exit
 fi
@@ -75,6 +110,7 @@ echo "Invalid selection: Aborting script"
 exit
 fi
 maxscroff=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies | sed 's/ /\n/g' | sed '$d' | tail -n+5 | head -n 8 | head -n$input | tail -n1)
+fi
 clear
 echo "Governor selection:"
 echo
@@ -88,8 +124,11 @@ for line in $governors; do
 	printf "${line_counter}) ${line}\n"
 done
 IFS=$OLD_IFS
-echo "Enter a selection [exit = 99]:"
+echo "Choose number selection[0 or 99 = exit]:"
 read input
+if [ "$input" == "0" ];then
+exit
+fi
 if [ "$input" == "99" ];then
 exit
 fi
@@ -111,8 +150,11 @@ for line in $schedulers; do
 	printf "${line_counter}) ${line}\n"
 done
 IFS=$OLD_IFS
-echo "Enter a selection [exit = 99]:"
+echo "Choose number selection[0 or 99 = exit]:"
 read input
+if [ "$input" == "0" ];then
+exit
+fi
 if [ "$input" == "99" ];then
 exit
 fi
@@ -122,6 +164,7 @@ exit
 fi
 scheduler=$(cat /sys/block/mmcblk0/queue/scheduler | sed 's/[[]//g' | sed 's/[]]//g' | sed 's/ /\n/g' | sed '$d' | sed 's/ //g' | head -n$input | tail -n1)
 clear
+if [ -e /sys/android_touch/sweep2wake ]; then
 echo "Sweep2Wake selection:"
 echo 
 echo "1) Disable"
@@ -129,6 +172,10 @@ echo "2) Enable"
 echo "3) Enable w/o button lights"
 echo "Choose number selection[99 = abort][0 = default:Disabled]:"
 read s2w
+if [ "$s2w" -gt "3" ];then
+echo "Invalid selection: Aborting script"
+exit
+fi
 	case "$s2w" in
                 "0")
                         s2w=0
@@ -150,9 +197,6 @@ read s2w
 			exit
                         ;;
 	esac
-if [ "$s2w" -gt "3" ];then
-echo "Invalid selection: Aborting script"
-exit
 fi
 clear
 maxkhz2=$(echo $maxkhz | sed '$s/000$/mhz/')
