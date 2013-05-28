@@ -6,7 +6,6 @@ boot=$(grep -i "boot" /proc/emmc | sed 's/.*boot\(.*\)<\/recovery.*/\1/' | sed '
 recovery=$(grep -i "recovery" /proc/emmc | sed 's/.*boot\(.*\)<\/recovery.*/\1/' | sed 's/:[^:]*$//')
 #Let's not rely on static values, we will get them from emmc hardware instead
 DATE=$(date +"%m%d%y")
-currentrom=$(cat /sdcard2/lunar/currentromconfig)
 clear
 echo "Loading"
 sleep 1
@@ -24,35 +23,69 @@ if [ ! -d "/sdcard2/lunar" ]; then
 mkdir /sdcard2/lunar
 fi
 cd /sdcard2/lunar
-if [ ! -e /sdcard2/lunar/currentromconfig ]; then
-echo "NO SPACES or Special characters"
+#dd if=/dev/block/$recovery of=/sdcard2/lunar/recoverytemp.img 2> /dev/null
+#abootimg -x recoverytemp.img > /dev/null
+#recoverysha1=$(sha1sum initrd.img | cut -d ' ' -f 1)
+#rm recoverytemp.img
+#rm zImage
+#rm bootimg.cfg
+#rm initrd.img
+currentrom1=$(grep -i "ro.aa.taskid=" /system/build.prop | sed "s/ro.aa.taskid=//g")
+currentrom2=$(grep -i "otaupdater.otaid=" /system/build.prop | sed "s/otaupdater.otaid=//g")
+if [ "$currentrom1" == "264016" ];then
+currentrom="Sense-3.6-OTA"
+fi
+if [ "$currentrom1" == "275361" ];then
+currentrom="Sense-3.6-Global"
+fi
+if [ "$currentrom1" == "311390" ];then
+currentrom="Sense-3.6-Global"
+fi
+if [ "$currentrom1" == "290923" ];then
+currentrom="Sense-3.6-Global_Sense4.X"
+fi
+if [ "$currentrom1" == "249167" ];then
+currentrom="Sense-3.6-Global_Sense4.X"
+fi
+if [ "$currentrom1" == "263510" ];then
+currentrom="Sense4.X"
+fi
+if [ -z "$currentrom2" -a "${currentrom2+xxx}" = "xxx" ]; then
+currentrom=$(cat /sdcard2/lunar/currentromconfig)
+else
+currentrom3=$(grep -i "otaupdater.otaver=" /system/build.prop | sed "s/otaupdater.otaver=//g")
+currentrom=$(echo "$currentrom2-v$currentrom3")
+fi
+echo $currentrom > /sdcard2/lunar/currentromconfig
+if [ -e "/sdcard2/lunar/currentromconfig" ]; then
+echo "Current rom is set to $currentrom"
+echo "is this correct?"
+echo "1) Yes"
+echo "2) No"
+echo
+echo "Choose number selection[99 = abort]:"
+read configconfirm
+if [ "$configconfirm" == "1" ]; then
+echo
+else
 echo "Enter name of current rom [Aa-Zz|0-9] then press [ENTER]:"
 read currentrom
-echo "$currentrom" > currentromconfig
+currentrom=$(echo $currentrom| sed 's/[^a-zA-Z0-9]//g')
 fi
-if [ -e /sdcard2/lunar/currentromconfig ]; then
-echo "Current rom is set to $currentrom"
-echo "is this correct?[Yy = yes other to modify | Any key = No ]then press [ENTER]"
-read configconfirm
+else
+echo "Enter name of current rom [Aa-Zz|0-9] then press [ENTER]:"
+read currentrom
+currentrom=$(echo $currentrom| sed 's/[^a-zA-Z0-9]//g')
+fi
+if [ "$configconfirm" == "99" ]; then
+exit
+fi
 echo $configconfirm > lunardebug.log
-echo
-if [ "$configconfirm" -ne "y" ]; then
-echo "NO SPACES or Special characters"
-echo "Enter name of current rom: [Aa-Zz|0-9] then press [ENTER]"
-read currentrom
-echo "$currentrom" > currentromconfig
-fi
-if [ "$configconfirm" -ne "Y" ]; then
-echo "NO SPACES or Special characters"
-echo "Enter name of current rom: [Aa-Zz|0-9] then press [ENTER]"
-read currentrom
-echo "$currentrom" > currentromconfig
-fi
-fi
+echo $currentrom > /sdcard2/lunar/currentromconfig
 echo $currentrom >> lunardebug.log
 echo
 echo "1) Flash a previously saved boot.img from cmdline script"
-echo "2) Flash a recovery.img"
+echo "2) Backup\Flash a recovery.img"
 echo "3) Update current kernel with an AnyKernel zImage"
 echo "4) Flash boot.img from zip and auto-reboot to recovery"
 echo
@@ -132,7 +165,7 @@ read menu
 					if [[ $file_chosen == *.img ]]; then
 					dd if=$file_chosen of=/dev/block/$boot 2>> lunardebug.log
 					fi
-					rm /data/dalvik-cache/*
+					rm -r /data/dalvik-cache
 					echo "Rebooting to recovery....."
 					echo ".... to wipe Dalvik Cache & Cache"
 					echo "--wipe_cache" >> /cache/recovery/command
@@ -160,6 +193,34 @@ read menu
 		;;
                 "2")
 			echo "2) Flash a recovery.img" >> lunardebug.log
+			echo "Backup current recovery?"
+			echo "1) Yes"
+			echo "2) No"
+			read backup
+			case "$backup" in
+				"1")
+					mkdir recoverytemp
+					dd if=/dev/block/$recovery of=/sdcard2/lunar/recoverytemp/recoverytemp.img 2>> lunardebug.log
+					cd recoverytemp
+					abootimg -x recoverytemp.img
+					recoverysize1=$(stat -c %s zImage)
+					recoverysize2=$(stat -c %s initrd.img)
+					recoverysize=$(($recoverysize1 + $recoverysize2 + 6120))
+					printf -v recoveryhexsize "%x" "$recoverysize"
+					sed -i "s/bootsize.*/bootsize = 0x$recoveryhexsize/g" bootimg.cfg
+					abootimg -u recoverytemp.img -f bootimg.cfg
+					echo "Your current recovery was saved to SDCard/Lunar/recovery_$DATE dir as recovery.img"
+					cd ..
+					if [ ! -d "/sdcard2/recovery_$DATE" ]; then
+					mkdir recovery_$DATE
+					fi
+					mv ./recoverytemp/recoverytemp.img ./recovery_$DATE/recovery.img
+					rm -r /sdcard2/lunar/recoverytemp
+					;;
+				"2")
+					echo "Skipping creation of a recovery backup"
+					;;
+			esac
 			grep_cmd=`find ./recovery* | grep -i \\.img$`
 			echo "Recoveries found:" 
 			echo
@@ -200,33 +261,6 @@ read menu
 			read confirm
 			case "$confirm" in
 				"1")
-					echo "Backup current recovery?"
-					echo "1) Yes"
-					echo "2) No"
-					read backup
-					case "$backup" in
-						"1")
-							mkdir recoverytemp
-							dd if=/dev/block/$recovery of=/sdcard2/lunar/recoverytemp/recoverytemp.img 2>> lunardebug.log
-							cd recoverytemp
-							abootimg -x recoverytemp.img
-							recoverysize1=$(stat -c %s zImage)
-							recoverysize2=$(stat -c %s initrd.img)
-							recoverysize=$(($recoverysize1 + $recoverysize2 + 6120))
-							printf -v recoveryhexsize "%x" "$recoverysize"
-							sed -i "s/bootsize.*/bootsize = 0x$recoveryhexsize/g" bootimg.cfg
-							abootimg -u recoverytemp.img -f bootimg.cfg
-							echo "Your current recovery was saved to SDCard/Lunar/recovery_$DATE dir as recovery.img"
-							cd ..
-							mkdir recovery_$DATE
-							mv ./recoverytemp/recoverytemp.img ./recovery_$DATE/recovery.img
-							rm -r /sdcard2/lunar/recoverytemp
-							;;
-						"2")
-							echo "Skipping creation of a recovery backup"
-							;;
-					esac
-					$backup
 					echo "Flashing selection in ..."
 					echo "5"
 					sleep 1
@@ -409,7 +443,7 @@ read menu
 					rm /sdcard2/lunar/zImage
 					rm /sdcard2/lunar/initrd.img
 					rm /sdcard2/lunar/bootimg.cfg
-					rm /data/dalvik-cache/*
+					rm -r /data/dalvik-cache
 					if [[ $file_chosen == *.zip ]]; then
 					file_chosen=$(echo $file_chosen | sed -e "s|/sdcard2/|/sdcard/|")
 					echo "--update_package=$file_chosen" > /cache/recovery/command
