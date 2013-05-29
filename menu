@@ -8,34 +8,19 @@ recovery=$(grep -i "recovery" /proc/emmc | sed 's/.*boot\(.*\)<\/recovery.*/\1/'
 DATE=$(date +"%m%d%y")
 extsd=$(grep "/devices/platform/msm_sdcc.3/mmc_host/mmc2" /system/etc/vold.fstab | sed 's/dev_mount //g' | sed 's/ .*//g')
 clear
-echo "Loading"
+echo "Loading 	LunarMenu"
 sleep 1
 clear
-echo "Loading L"
+echo "Loading 		LunarMenu"
 sleep 1
 clear
-echo "Loading Lu."
+echo "Loading 			LunarMenu"
 sleep 1
 clear
-echo "Loading Lun."
+echo "Loading 				LunarMenu"
 sleep 1
 clear
-echo "Loading Luna."
-sleep 1
-clear
-echo "Loading Lunar."
-sleep 1
-clear
-echo "Loading LunarM."
-sleep 1
-clear
-echo "Loading LunarMe."
-sleep 1
-clear
-echo "Loading LunarMen."
-sleep 1
-clear
-echo "Loading LunarMenu"
+echo "Loading 					LunarMenu"
 sleep 1
 clear
 if [ ! -d "/$extsd/lunar" ]; then
