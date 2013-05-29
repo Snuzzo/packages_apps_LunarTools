@@ -106,7 +106,10 @@ read menu
 			echo "1) Flash a previously saved boot.img from cmdline script" >> lunardebug.log
 			grep_cmd1=`find ./boot* | grep -i \\.img$`
 			grep_cmd2=`find *.cfg`
-			grep_cmd=`echo $grep_cmd1 $grep_cmd2`
+			#-- Let's source any .cfg's found from sbin --#
+			grep_cmd3=`find /sbin -name "*.cfg"`
+			cd /$extsd/lunar/
+			grep_cmd=`echo $grep_cmd1 $grep_cmd2 $grep_cmd3`
 			echo "Previous configurations:" 
 			echo
 			for filename in $grep_cmd 

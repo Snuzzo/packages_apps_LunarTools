@@ -244,9 +244,6 @@ read confirm
 			echo "Configuration already exists; aborting copy to /$extsd/lunar"
 			fi
 			rm tempboot.img
-			rm /$extsd/lunar/bootimg.cfg
-			rm /$extsd/lunar/initrd.img
-			rm /$extsd/lunar/zImage
 			rm /data/dalvik-cache/*
 			echo "Rebooting to recovery....."
 			echo ".... to wipe Dalvik Cache & Cache"
