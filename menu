@@ -6,18 +6,36 @@ boot=$(grep -i "boot" /proc/emmc | sed 's/.*boot\(.*\)<\/recovery.*/\1/' | sed '
 recovery=$(grep -i "recovery" /proc/emmc | sed 's/.*boot\(.*\)<\/recovery.*/\1/' | sed 's/:[^:]*$//')
 #Let's not rely on static values, we will get them from emmc hardware instead
 DATE=$(date +"%m%d%y")
-extsd=$(grep "/devices/platform/msm_sdcc.3/mmc_host/mmc2" /system/etc/vold.fstab | sed "s/mnt.*//" | sed 's/[/]//' | sed 's/dev_mount //g' | sed 's/ //g')
+extsd=$(grep "/devices/platform/msm_sdcc.3/mmc_host/mmc2" /system/etc/vold.fstab | sed 's/dev_mount //g' | sed 's/ .*//g')
 clear
 echo "Loading"
 sleep 1
 clear
-echo "Loading ."
+echo "Loading L"
 sleep 1
 clear
-echo "Loading . ."
+echo "Loading Lu."
 sleep 1
 clear
-echo "Loading . . ."
+echo "Loading Lun."
+sleep 1
+clear
+echo "Loading Luna."
+sleep 1
+clear
+echo "Loading Lunar."
+sleep 1
+clear
+echo "Loading LunarM."
+sleep 1
+clear
+echo "Loading LunarMe."
+sleep 1
+clear
+echo "Loading LunarMen."
+sleep 1
+clear
+echo "Loading LunarMenu"
 sleep 1
 clear
 if [ ! -d "/$extsd/lunar" ]; then
@@ -54,17 +72,19 @@ fi
 if [ "$currentrom1" == "263510" ];then
 currentrom="Sense4.X"
 fi
-if [ -z "$currentrom3" -a "${currentrom3+xxx}" -ne "xxx" ]; then
+if [ "$currentrom3-xxx" != "-xxx" ]; then
 currentrom2=$(grep -i "otaupdater.otaver=" /system/build.prop | sed "s/otaupdater.otaver=//g")
-currentrom=$(echo "$currentrom3-v$currentrom2-$currentrom8")
+currentrom=$(echo "$currentrom3-v$currentrom2")
 fi
-if [ -z "$currentrom5" -a "${currentrom5+xxx}" -ne "xxx" ]; then
+if [ "$currentrom5-xxx" != "-xxx" ]; then
 currentrom4=$(grep -i "ro.goo.version=" /system/build.prop | sed "s/ro.goo.version=//g")
-currentrom=$(echo "$currentrom5-v$currentrom4-$currentrom8")
+currentrom=$(echo "$currentrom5-v$currentrom4")
 fi
-if [ -z "$currentrom7" -a "${currentrom7+xxx}" -ne "xxx" ]; then
-currentrom=$(echo "$currentrom7-$currentrom8")
+if [ "$currentrom7-xxx" != "-xxx" ]; then
+currentrom=$(echo "cm$currentrom7" | sed "s/-UNOFFICIAL//g" | sed "s/-vigor//g")
 fi
+currentrom=$(echo $(echo $currentrom | sed 's/[^a-zA-Z0-9]//g')-$currentrom8)
+echo $currentrom >> lunardebug.log
 echo $currentrom > /$extsd/lunar/currentromconfig
 if [ -e "/$extsd/lunar/currentromconfig" ]; then
 echo "Current rom is set to $currentrom"
@@ -74,6 +94,9 @@ echo "2) No"
 echo
 echo "Choose number selection[99 = abort]:"
 read configconfirm
+if [ "$configconfirm" == "99" ]; then
+exit
+fi
 if [ "$configconfirm" == "1" ]; then
 echo
 else
@@ -81,13 +104,6 @@ echo "Enter name of current rom [Aa-Zz|0-9] then press [ENTER]:"
 read currentrom
 currentrom=$(echo $currentrom | sed 's/[^a-zA-Z0-9]//g')
 fi
-else
-echo "Enter name of current rom [Aa-Zz|0-9] then press [ENTER]:"
-read currentrom
-currentrom=$(echo $currentrom | sed 's/[^a-zA-Z0-9]//g')
-fi
-if [ "$configconfirm" == "99" ]; then
-exit
 fi
 echo $configconfirm > lunardebug.log
 echo $currentrom > /$extsd/lunar/currentromconfig
