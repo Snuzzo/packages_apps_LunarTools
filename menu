@@ -6,6 +6,7 @@ boot=$(grep -i "boot" /proc/emmc | sed 's/.*boot\(.*\)<\/recovery.*/\1/' | sed '
 recovery=$(grep -i "recovery" /proc/emmc | sed 's/.*boot\(.*\)<\/recovery.*/\1/' | sed 's/:[^:]*$//')
 #Let's not rely on static values, we will get them from emmc hardware instead
 DATE=$(date +"%m%d%y")
+extsd=$(grep "/devices/platform/msm_sdcc.3/mmc_host/mmc2" /system/etc/vold.fstab | sed "s/mnt.*//" | sed 's/[/]//' | sed 's/dev_mount //g' | sed 's/ //g')
 clear
 echo "Loading"
 sleep 1
@@ -19,11 +20,11 @@ clear
 echo "Loading . . ."
 sleep 1
 clear
-if [ ! -d "/sdcard2/lunar" ]; then
-mkdir /sdcard2/lunar
+if [ ! -d "/$extsd/lunar" ]; then
+mkdir /$extsd/lunar
 fi
-cd /sdcard2/lunar
-#dd if=/dev/block/$recovery of=/sdcard2/lunar/recoverytemp.img 2> /dev/null
+cd /$extsd/lunar
+#dd if=/dev/block/$recovery of=/$extsd/lunar/recoverytemp.img 2> /dev/null
 #abootimg -x recoverytemp.img > /dev/null
 #recoverysha1=$(sha1sum initrd.img | cut -d ' ' -f 1)
 #rm recoverytemp.img
@@ -31,7 +32,10 @@ cd /sdcard2/lunar
 #rm bootimg.cfg
 #rm initrd.img
 currentrom1=$(grep -i "ro.aa.taskid=" /system/build.prop | sed "s/ro.aa.taskid=//g")
-currentrom2=$(grep -i "otaupdater.otaid=" /system/build.prop | sed "s/otaupdater.otaid=//g")
+currentrom3=$(grep -i "otaupdater.otaid=" /system/build.prop | sed "s/otaupdater.otaid=//g")
+currentrom5=$(grep -i "ro.goo.developerid=" /system/build.prop | sed "s/ro.goo.developerid=//g")
+currentrom7=$(grep -i "ro.cm.version=" /system/build.prop | sed "s/ro.cm.version=//g")
+currentrom8=$(grep -i "ro.build.version.release=" /system/build.prop | sed "s/ro.build.version.release=//g")
 if [ "$currentrom1" == "264016" ];then
 currentrom="Sense-3.6-OTA"
 fi
@@ -50,14 +54,19 @@ fi
 if [ "$currentrom1" == "263510" ];then
 currentrom="Sense4.X"
 fi
-if [ -z "$currentrom2" -a "${currentrom2+xxx}" = "xxx" ]; then
-currentrom=$(cat /sdcard2/lunar/currentromconfig)
-else
-currentrom3=$(grep -i "otaupdater.otaver=" /system/build.prop | sed "s/otaupdater.otaver=//g")
-currentrom=$(echo "$currentrom2-v$currentrom3")
+if [ -z "$currentrom3" -a "${currentrom3+xxx}" -ne "xxx" ]; then
+currentrom2=$(grep -i "otaupdater.otaver=" /system/build.prop | sed "s/otaupdater.otaver=//g")
+currentrom=$(echo "$currentrom3-v$currentrom2-$currentrom8")
 fi
-echo $currentrom > /sdcard2/lunar/currentromconfig
-if [ -e "/sdcard2/lunar/currentromconfig" ]; then
+if [ -z "$currentrom5" -a "${currentrom5+xxx}" -ne "xxx" ]; then
+currentrom4=$(grep -i "ro.goo.version=" /system/build.prop | sed "s/ro.goo.version=//g")
+currentrom=$(echo "$currentrom5-v$currentrom4-$currentrom8")
+fi
+if [ -z "$currentrom7" -a "${currentrom7+xxx}" -ne "xxx" ]; then
+currentrom=$(echo "$currentrom7-$currentrom8")
+fi
+echo $currentrom > /$extsd/lunar/currentromconfig
+if [ -e "/$extsd/lunar/currentromconfig" ]; then
 echo "Current rom is set to $currentrom"
 echo "is this correct?"
 echo "1) Yes"
@@ -70,18 +79,18 @@ echo
 else
 echo "Enter name of current rom [Aa-Zz|0-9] then press [ENTER]:"
 read currentrom
-currentrom=$(echo $currentrom| sed 's/[^a-zA-Z0-9]//g')
+currentrom=$(echo $currentrom | sed 's/[^a-zA-Z0-9]//g')
 fi
 else
 echo "Enter name of current rom [Aa-Zz|0-9] then press [ENTER]:"
 read currentrom
-currentrom=$(echo $currentrom| sed 's/[^a-zA-Z0-9]//g')
+currentrom=$(echo $currentrom | sed 's/[^a-zA-Z0-9]//g')
 fi
 if [ "$configconfirm" == "99" ]; then
 exit
 fi
 echo $configconfirm > lunardebug.log
-echo $currentrom > /sdcard2/lunar/currentromconfig
+echo $currentrom > /$extsd/lunar/currentromconfig
 echo $currentrom >> lunardebug.log
 echo
 echo "1) Flash a previously saved boot.img from cmdline script"
@@ -149,14 +158,14 @@ read menu
 					sleep 1
 					echo "$file_chosen chosen" >> lunardebug.log
 					if [[ $file_chosen == *.cfg ]]; then
-					dd if=/dev/block/$boot of=/sdcard2/lunar/tempboot.img 2>> lunardebug.log
-					abootimg -x /sdcard2/lunar/tempboot.img >> lunardebug.log
+					dd if=/dev/block/$boot of=/$extsd/lunar/tempboot.img 2>> lunardebug.log
+					abootimg -x /$extsd/lunar/tempboot.img >> lunardebug.log
 					sed -i -e "s/gov.*//g" bootimg.cfg
 					file_chosen=$(cat $file_chosen)
 					sed -i -e "$ s/$/$file_chosen/g" bootimg.cfg
 					cat bootimg.cfg >> lunardebug.log
 					abootimg -u tempboot.img -f bootimg.cfg >> lunardebug.log
-					dd if=/sdcard2/lunar/tempboot.img of=/dev/block/$boot 2>> lunardebug.log
+					dd if=/$extsd/lunar/tempboot.img of=/dev/block/$boot 2>> lunardebug.log
 					rm bootimg.cfg
 					rm initrd.img
 					rm zImage
@@ -200,7 +209,7 @@ read menu
 			case "$backup" in
 				"1")
 					mkdir recoverytemp
-					dd if=/dev/block/$recovery of=/sdcard2/lunar/recoverytemp/recoverytemp.img 2>> lunardebug.log
+					dd if=/dev/block/$recovery of=/$extsd/lunar/recoverytemp/recoverytemp.img 2>> lunardebug.log
 					cd recoverytemp
 					abootimg -x recoverytemp.img
 					recoverysize1=$(stat -c %s zImage)
@@ -211,11 +220,11 @@ read menu
 					abootimg -u recoverytemp.img -f bootimg.cfg
 					echo "Your current recovery was saved to SDCard/Lunar/recovery_$DATE dir as recovery.img"
 					cd ..
-					if [ ! -d "/sdcard2/recovery_$DATE" ]; then
+					if [ ! -d "/$extsd/recovery_$DATE" ]; then
 					mkdir recovery_$DATE
 					fi
 					mv ./recoverytemp/recoverytemp.img ./recovery_$DATE/recovery.img
-					rm -r /sdcard2/lunar/recoverytemp
+					rm -r /$extsd/lunar/recoverytemp
 					;;
 				"2")
 					echo "Skipping creation of a recovery backup"
@@ -353,7 +362,7 @@ read menu
 					sleep 1
 					echo $file_chosen >> lunardebug.log
 					if [[ $file_chosen == *.zip ]]; then
-					file_chosen=$(echo $file_chosen | sed -e "s|./|/sdcard2/|")  
+					file_chosen=$(echo $file_chosen | sed -e "s|./|/$extsd/|")  
 					zimage=$(echo $file_chosen | sed "s/^/zimage_/" | sed -e "s|.zip||")
 					md51=$(md5sum $file_chosen | cut -d ' ' -f 1)
 					md52=$(echo $file_chosen | sed -e "s|.zip|.md5|")
@@ -369,8 +378,8 @@ read menu
 					fi 
 					fi
 					echo "Scanning zip file & Unzipping zImage"
-					unzip -e -o $file_chosen lunarmenu/$zimage -d /sdcard2/lunar/ 2>> lunardebug.log
-					unzip -e -o $file_chosen kernel/zImage -d /sdcard2/lunar/ 2>> lunardebug.log
+					unzip -e -o $file_chosen lunarmenu/$zimage -d /$extsd/lunar/ 2>> lunardebug.log
+					unzip -e -o $file_chosen kernel/zImage -d /$extsd/lunar/ 2>> lunardebug.log
 					if [ -e zImage ]; then
 					mv zImage $zimage
 					fi
@@ -385,38 +394,38 @@ read menu
 					else
 					sum1=$(sha1sum $file_chosen | cut -d ' ' -f 1)
 					fi
-					if [ ! -d "/sdcard2/temp" ]; then
+					if [ ! -d "/$extsd/temp" ]; then
 					#-- Checking if temp exists if not we will create it
-					mkdir /sdcard2/temp
+					mkdir /$extsd/temp
 					fi
-					dd if=/dev/block/$boot of=/sdcard2/temp/tempboot.img 2>> lunardebug.log
-					abootimg -x /sdcard2/temp/tempboot.img >> lunardebug.log
+					dd if=/dev/block/$boot of=/$extsd/temp/tempboot.img 2>> lunardebug.log
+					abootimg -x /$extsd/temp/tempboot.img >> lunardebug.log
 					sum2=$(sha1sum zImage | cut -d ' ' -f 1)
-					cp /sdcard2/temp/tempboot.img /sdcard2/lunar/boot_last_known_good.img
+					cp /$extsd/temp/tempboot.img /$extsd/lunar/boot_last_known_good.img
 					echo "Pulled a copy of your current boot.img to lunar/boot_last_known_good.img"
 					#-- The next line is dependent on the placement of abootimg
-					cd /sdcard2/lunar
+					cd /$extsd/lunar
 					if [[ $file_chosen == *.zip ]]; then
 					size1=$(stat -c %s $zimage)
 					else
 					size1=$(stat -c %s $file_chosen)
 					fi
 					if [[ $file_chosen == *.zip ]]; then
-					abootimg -u /sdcard2/temp/tempboot.img -k $zimage >> lunardebug.log
+					abootimg -u /$extsd/temp/tempboot.img -k $zimage >> lunardebug.log
 					else
-					abootimg -u /sdcard2/temp/tempboot.img -k $file_chosen >> lunardebug.log
+					abootimg -u /$extsd/temp/tempboot.img -k $file_chosen >> lunardebug.log
 					fi
-					size2=$(stat -c %s /sdcard2/lunar/initrd.img)
+					size2=$(stat -c %s /$extsd/lunar/initrd.img)
 					size=$(($size1 + $size2 + 8096))
 					printf -v hexsize "%x" "$size"
-					sed -i "s/bootsize.*/bootsize = 0x$hexsize/g" /sdcard2/lunar/bootimg.cfg
-					abootimg -u /sdcard2/temp/tempboot.img -f /sdcard2/lunar/bootimg.cfg >> lunardebug.log
-					cd /sdcard2/temp
-					dd if=/sdcard2/temp/tempboot.img of=/dev/block/$boot 2>> lunardebug.log
-					dd if=/dev/block/$boot of=/sdcard2/temp/tempboot.img 2>> lunardebug.log
-					abootimg -x /sdcard2/temp/tempboot.img >> lunardebug.log
+					sed -i "s/bootsize.*/bootsize = 0x$hexsize/g" /$extsd/lunar/bootimg.cfg
+					abootimg -u /$extsd/temp/tempboot.img -f /$extsd/lunar/bootimg.cfg >> lunardebug.log
+					cd /$extsd/temp
+					dd if=/$extsd/temp/tempboot.img of=/dev/block/$boot 2>> lunardebug.log
+					dd if=/dev/block/$boot of=/$extsd/temp/tempboot.img 2>> lunardebug.log
+					abootimg -x /$extsd/temp/tempboot.img >> lunardebug.log
 					sed -i "s/bootsize.*/bootsize = 0x$hexsize/g" bootimg.cfg
-					abootimg -u /sdcard2/temp/tempboot.img -f bootimg.cfg >> lunardebug.log
+					abootimg -u /$extsd/temp/tempboot.img -f bootimg.cfg >> lunardebug.log
 					sum3=$(sha1sum zImage | cut -d ' ' -f 1)
 					if [[ $file_chosen == *.zip ]]; then
 					echo "New zImage sha1sum is $sum1"
@@ -432,20 +441,20 @@ read menu
 					currentboot=$(echo $file_chosen | sed -e "s|zimage|boot_"$currentrom"_|")
 					fi
 					echo "Copy of your updated boot.img is at lunar/$currentboot.img"
-					mv /sdcard2/temp/tempboot.img /sdcard2/lunar/$currentboot.img
-					rm /sdcard2/lunar/boot_last_known_good.img
+					mv /$extsd/temp/tempboot.img /$extsd/lunar/$currentboot.img
+					rm /$extsd/lunar/boot_last_known_good.img
 					else
 					echo "flash unsuccessful"
 					echo "restoring boot_last_known_good.img"
-					dd if=/sdcard2/lunar/boot_last_known_good.img of=/dev/block/$boot 2>> lunardebug.log
+					dd if=/$extsd/lunar/boot_last_known_good.img of=/dev/block/$boot 2>> lunardebug.log
 					fi
-					rm -r /sdcard2/temp
-					rm /sdcard2/lunar/zImage
-					rm /sdcard2/lunar/initrd.img
-					rm /sdcard2/lunar/bootimg.cfg
+					rm -r /$extsd/temp
+					rm /$extsd/lunar/zImage
+					rm /$extsd/lunar/initrd.img
+					rm /$extsd/lunar/bootimg.cfg
 					rm -r /data/dalvik-cache
 					if [[ $file_chosen == *.zip ]]; then
-					file_chosen=$(echo $file_chosen | sed -e "s|/sdcard2/|/sdcard/|")
+					file_chosen=$(echo $file_chosen | sed -e "s|/$extsd/|/sdcard/|")
 					echo "--update_package=$file_chosen" > /cache/recovery/command
 					echo "Rebooting to recovery....." 
 					echo "... to flash matching zip to finish installation"
@@ -529,8 +538,8 @@ read menu
 					sleep 1
 					echo "1"
 					sleep 1
-					unzip -e -o $file_chosen boot.img -d /sdcard2/lunar/ 2>> lunardebug.log
-					dd if=/sdcard2/lunar/boot.img of=/dev/block/$boot 2>> lunardebug.log
+					unzip -e -o $file_chosen boot.img -d /$extsd/lunar/ 2>> lunardebug.log
+					dd if=/$extsd/lunar/boot.img of=/dev/block/$boot 2>> lunardebug.log
 					rm boot.img
 					echo "Rebooting to recovery....."
 					echo "... Please finish flashing $file_chosen"
