@@ -5,34 +5,34 @@
 boot=$(grep -i "boot" /proc/emmc | sed 's/.*boot\(.*\)<\/recovery.*/\1/' | sed 's/:[^:]*$//')
 recovery=$(grep -i "recovery" /proc/emmc | sed 's/.*boot\(.*\)<\/recovery.*/\1/' | sed 's/:[^:]*$//')
 hardware=$(grep -i "board=" /system/build.prop | sed "s/.*board=//" | cut -d" " -f1)
-extsd=$(grep "/devices/platform/msm_sdcc.3/mmc_host/mmc2" /system/etc/vold.fstab | sed "s/mnt.*//" | sed 's/[/]//' | sed 's/dev_mount //g' | sed 's/ //g')
+extsd=$(grep "/devices/platform/msm_sdcc.3/mmc_host/mmc2" /system/etc/vold.fstab | sed 's/dev_mount //g' | sed 's/ .*//g')
 #Let's not rely on static values, we will get them from emmc hardware instead
-#echo "Kernel type selection:"
-#echo 
-#echo "1) Set options via Command Line"
-#echo "2) Set options via init.d"
-#echo
-#echo "Choose number selection[0 or 99 = exit]:"
-#read kerneltype
-#if [ "$kerneltype" -gt "2" ];then
-#echo "Invalid selection: Aborting script"
-#exit
-#fi
-#	case "$kerneltype" in
-#               "0")
-#			exit
-#                       ;;
-#               "1")
-#                       kerneltype=cmdline
-#                       ;;
-#               "2")
-#                       kerneltype=initd
-#                       ;;
-#               "99")
-#			exit
-#                       ;;
-#	esac
-#clear
+echo "Kernel type selection:"
+echo 
+echo "1) Set options via Command Line"
+echo "2) Set options via init.d"
+echo
+echo "Choose number selection[0 or 99 = exit]:"
+read kerneltype
+if [ "$kerneltype" -gt "2" ];then
+echo "Invalid selection: Aborting script"
+exit
+fi
+	case "$kerneltype" in
+               "0")
+			exit
+                       ;;
+               "1")
+                       kerneltype=cmdline
+                       ;;
+               "2")
+                       kerneltype=initd
+                       ;;
+               "99")
+			exit
+                       ;;
+	esac
+clear
 echo "Max CPU Clock selection:"
 echo 
 frequencies=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies | sed 's/ /\n/g' | sed '$d' | tail -n 5)
@@ -164,6 +164,9 @@ echo "Invalid selection: Aborting script"
 exit
 fi
 scheduler=$(cat /sys/block/mmcblk0/queue/scheduler | sed 's/[[]//g' | sed 's/[]]//g' | sed 's/ /\n/g' | sed '$d' | sed 's/ //g' | head -n$input | tail -n1)
+if [ "$kerneltype" == "2" ];then
+scheduler=$(cat /sys/block/mmcblk0/queue/scheduler | sed 's/[[]//g' | sed 's/[]]//g' | sed "s/$scheduler/[$scheduler]/g")
+fi
 clear
 if [ -e /sys/android_touch/sweep2wake ]; then
 echo "Sweep2Wake selection:"
@@ -203,13 +206,14 @@ clear
 maxkhz2=$(echo $maxkhz | sed '$s/000$/mhz/')
 minkhz2=$(echo $minkhz | sed '$s/000$/mhz/')
 maxscroff2=$(echo $maxscroff | sed '$s/000$/mhz/')
-echo "Last chance before we flash" 
+echo "Last chance before we flash/push to system" 
 echo "Options chosen are $maxkhz2 $minkhz2 $maxscroff2 $gov $scheduler S2w $s2w2"
 echo 
-echo "1) Yes; I am ready flash it right away"
-echo "2) No; let's just save it for later"
+echo "1) Yes; Let's do it!"
+echo "2) No; let's just save it for later!"
 echo "Confirm flash?"
 read confirm
+if [ "$kerneltype" == "cmdline" ];then
 	case "$confirm" in
 		"1")
 			clear
@@ -221,13 +225,7 @@ read confirm
 			cd temp
 			dd if=/dev/block/$boot of=/$extsd/temp/tempboot.img
 			abootimg -x /$extsd/temp/tempboot.img
-			size1=$(stat -c %s zImage)
-			size2=$(stat -c %s initrd.img)
-			size=$(($size1 + $size2 + 1048576))
-			printf -v hexsize "%x" "$size"
-			sed -i '/cmdline = / d' bootimg.cfg
-			sed -i "s/bootsize.*/bootsize = 0x$hexsize/g" bootimg.cfg
-			echo "cmdline = console=ttyHSL3 androidboot.hardware="$hardware" no_console_suspend=1 gov="$gov "maxkhz="$maxkhz "minkhz="$minkhz "scheduler="$scheduler "maxscroff="$maxscroff "s2w="$s2w"" >> bootimg.cfg
+			sed -i -e "$ s/$/gov=$gov maxkhz=$maxkhz minkhz=$minkhz scheduler=$scheduler maxscroff=$maxscroff s2w=$s2w/g" bootimg.cfg
 			abootimg -u /$extsd/temp/tempboot.img -f /$extsd/temp/bootimg.cfg
 			dd if=/$extsd/temp/tempboot.img of=/dev/block/$boot
 			rm bootimg.cfg
@@ -251,39 +249,56 @@ read confirm
 			echo "GoodBye!"
 			reboot recovery
 			;;
-                "2")
-			echo "Aborted flash!"
-			cd /$extsd
-			if [ ! -d "/temp" ]; then
-			mkdir temp
+fi
+if [ "$kerneltype" == "initd" ];then
+	case "$confirm" in
+		"1")
+			clear
+			echo '#!/system/bin/sh' > /system/etc/init.d/99lunar
+			echo 'echo ''"'$scheduler'"' '> /sys/block/mmcblk0/queue/scheduler' >> /system/etc/init.d/99lunar
+			echo 'echo "'$gov'" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor' >> /system/etc/init.d/99lunar
+			echo 'echo "'$minkhz'" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq' >> /system/etc/init.d/99lunar
+			echo 'echo "'$maxkhz'" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq' >> /system/etc/init.d/99lunar
+			if [ -d "/sys/devices/system/cpu/cpu1/" ]; then
+			echo 'echo "'$gov'" > /sys/devices/system/cpu/cpu1/cpufreq/scaling_governor' >> /system/etc/init.d/99lunar
+			echo 'echo "'$minkhz'" > /sys/devices/system/cpu/cpu1/cpufreq/scaling_min_freq' >> /system/etc/init.d/99lunar
+			echo 'echo "'$maxkhz'" > /sys/devices/system/cpu/cpu1/cpufreq/scaling_max_freq' >> /system/etc/init.d/99lunar
 			fi
-			cd temp
-			dd if=/dev/block/$boot of=/$extsd/temp/tempboot.img
-			abootimg -x /$extsd/temp/tempboot.img
-			size1=$(stat -c %s zImage)
-			size2=$(stat -c %s initrd.img)
-			size=$(($size1 + $size2 + 1048576))
-			printf -v hexsize "%x" "$size"
-			sed -i '/cmdline = / d' bootimg.cfg
-			sed -i "s/bootsize.*/bootsize = 0x$hexsize/g" bootimg.cfg
-			echo "cmdline = console=ttyHSL3 androidboot.hardware="$hardware" no_console_suspend=1 gov="$gov "maxkhz="$maxkhz "minkhz="$minkhz "scheduler="$scheduler "maxscroff="$maxscroff "s2w="$s2w"" >> bootimg.cfg
-			abootimg -u /$extsd/temp/tempboot.img -f /$extsd/temp/bootimg.cfg
-			rm bootimg.cfg
-			rm initrd.img
-			rm zImage
-			if [ ! -d "/$extsd/lunar" ]; then
-			mkdir /$extsd/lunar
+			if [ -d "/sys/devices/system/cpu/cpu2/" ]; then
+			echo 'echo "'$gov'" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_governor' >> /system/etc/init.d/99lunar
+			echo 'echo "'$minkhz'" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_min_freq' >> /system/etc/init.d/99lunar
+			echo 'echo "'$maxkhz'" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_max_freq' >> /system/etc/init.d/99lunar
 			fi
-			if [ ! -e /$extsd/lunar/boot_"$maxkhz2"_"$minkhz2"_"$maxscroff2"_"$gov"_"$scheduler"_s2w"$s2w2".img ]; then
-			mv /$extsd/temp/tempboot.img /$extsd/lunar/boot_"$maxkhz2"_"$minkhz2"_"$maxscroff2"_"$gov"_"$scheduler"_s2w"$s2w2".img
-			echo "I just saved your boot LOL"
-			echo "It is saved here /$extsd/lunar/boot_"$maxkhz2"_"$minkhz2"_"$maxscroff2"_"$gov"_"$scheduler"_s2w"$s2w2".img"
-			echo "Run 'sh /sbin/menu.sh' to flash"
+			if [ -d "/sys/devices/system/cpu/cpu3/" ]; then
+			echo 'echo "'$gov'" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_governor' >> /system/etc/init.d/99lunar
+			echo 'echo "'$minkhz'" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_min_freq' >> /system/etc/init.d/99lunar
+			echo 'echo "'$maxkhz'" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_max_freq' >> /system/etc/init.d/99lunar
+			fi
+			if [ -e /sys/android_touch/sweep2wake ]; then
+			echo 'echo '$s2w'> /sys/android_touch/sweep2wake' >> /system/etc/init.d/99lunar
+			fi
+			chmod 755 /system/etc/init.d/99lunar
+			if [ ! -e /$extsd/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2".cfg ]; then
+			echo "gov="$gov "maxkhz="$maxkhz "minkhz="$minkhz "scheduler="$scheduler "maxscroff="$maxscroff "s2w="$s2w"" >> /sdcard2/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2".cfg
+			echo "Flashed new boot and created .cfg at"
+			echo "/$extsd/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2".cfg"
 			else
 			echo "Configuration already exists; aborting copy to /$extsd/lunar"
-			rm tempboot.img
 			fi
-			echo "Come back soon!"
-                        ;;
+			echo "Reboot to apply new settings"
+			echo ".... to wipe Dalvik Cache & Cache"
+			echo "GoodBye!"
+			;;
+fi
+                "2")
+			echo "Aborted push to system!"
+			if [ ! -e /$extsd/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2".cfg ]; then
+			echo "gov="$gov "maxkhz="$maxkhz "minkhz="$minkhz "scheduler="$scheduler "maxscroff="$maxscroff "s2w="$s2w"" >> /sdcard2/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2".cfg
+			echo "Created .cfg at"
+			echo "/$extsd/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2".cfg"
+			else
+			echo "Configuration already exists; aborting copy to /$extsd/lunar"
+			fi
+			echo "Come back soon"
+			;;
 	esac
-$confirm
