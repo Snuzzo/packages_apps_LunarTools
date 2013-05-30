@@ -225,6 +225,7 @@ if [ "$kerneltype" == "cmdline" ];then
 			cd temp
 			dd if=/dev/block/$boot of=/$extsd/temp/tempboot.img
 			abootimg -x /$extsd/temp/tempboot.img
+			sed -i -e "s/gov.*//g" bootimg.cfg
 			sed -i -e "$ s/$/gov=$gov maxkhz=$maxkhz minkhz=$minkhz scheduler=$scheduler maxscroff=$maxscroff s2w=$s2w/g" bootimg.cfg
 			abootimg -u /$extsd/temp/tempboot.img -f /$extsd/temp/bootimg.cfg
 			dd if=/$extsd/temp/tempboot.img of=/dev/block/$boot
