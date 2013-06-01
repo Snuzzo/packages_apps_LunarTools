@@ -250,6 +250,18 @@ if [ "$kerneltype" == "cmdline" ];then
 			echo "GoodBye!"
 			reboot recovery
 			;;
+                "2")
+			echo "Aborted push to system!"
+			if [ ! -e /$extsd/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2".cfg ]; then
+			echo "gov="$gov "maxkhz="$maxkhz "minkhz="$minkhz "scheduler="$scheduler "maxscroff="$maxscroff "s2w="$s2w"" >> /sdcard2/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2".cfg
+			echo "Created .cfg at"
+			echo "/$extsd/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2".cfg"
+			else
+			echo "Configuration already exists; aborting copy to /$extsd/lunar"
+			fi
+			echo "Come back soon"
+			;;
+	esac
 fi
 if [ "$kerneltype" == "initd" ];then
 	case "$confirm" in
@@ -287,10 +299,8 @@ if [ "$kerneltype" == "initd" ];then
 			echo "Configuration already exists; aborting copy to /$extsd/lunar"
 			fi
 			echo "Reboot to apply new settings"
-			echo ".... to wipe Dalvik Cache & Cache"
 			echo "GoodBye!"
 			;;
-fi
                 "2")
 			echo "Aborted push to system!"
 			if [ ! -e /$extsd/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2".cfg ]; then
@@ -303,3 +313,4 @@ fi
 			echo "Come back soon"
 			;;
 	esac
+fi
