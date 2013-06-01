@@ -2,9 +2,6 @@
 #
 # 
 # Kludgy hack to help with kernels
-boot=$(grep -i "boot" /proc/emmc | sed 's/.*boot\(.*\)<\/recovery.*/\1/' | sed 's/:[^:]*$//')
-recovery=$(grep -i "recovery" /proc/emmc | sed 's/.*boot\(.*\)<\/recovery.*/\1/' | sed 's/:[^:]*$//')
-hardware=$(grep -i "board=" /system/build.prop | sed "s/.*board=//" | cut -d" " -f1)
 extsd=$(grep "/devices/platform/msm_sdcc.3/mmc_host/mmc2" /system/etc/vold.fstab | sed 's/dev_mount //g' | sed 's/ .*//g')
 #Let's not rely on static values, we will get them from emmc hardware instead
 echo "Max CPU Clock selection:"
@@ -180,34 +177,39 @@ clear
 maxkhz2=$(echo $maxkhz | sed '$s/000$/mhz/')
 minkhz2=$(echo $minkhz | sed '$s/000$/mhz/')
 maxscroff2=$(echo $maxscroff | sed '$s/000$/mhz/')
-echo "Last chance before we flash/push to system" 
+echo "Last chance before we push to system" 
 echo "Options chosen are $maxkhz2 $minkhz2 $maxscroff2 $gov $scheduler S2w $s2w2"
 echo 
 echo "1) Yes; Let's do it!"
 echo "2) No; let's just save it for later!"
-echo "Confirm flash?"
 read confirm
 	case "$confirm" in
 		"1")
 			clear
-			cd /$extsd
-			if [ ! -d "/temp" ]; then
-			#-- Checking if temp exists if not we will create it
-			mkdir temp
+			echo '#!/system/bin/sh' > /system/etc/init.d/99lunar
+			echo 'echo ''"'$scheduler'"' '> /sys/block/mmcblk0/queue/scheduler' >> /system/etc/init.d/99lunar
+			echo 'echo "'$gov'" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor' >> /system/etc/init.d/99lunar
+			echo 'echo "'$minkhz'" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq' >> /system/etc/init.d/99lunar
+			echo 'echo "'$maxkhz'" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq' >> /system/etc/init.d/99lunar
+			if [ -d "/sys/devices/system/cpu/cpu1/" ]; then
+			echo 'echo "'$gov'" > /sys/devices/system/cpu/cpu1/cpufreq/scaling_governor' >> /system/etc/init.d/99lunar
+			echo 'echo "'$minkhz'" > /sys/devices/system/cpu/cpu1/cpufreq/scaling_min_freq' >> /system/etc/init.d/99lunar
+			echo 'echo "'$maxkhz'" > /sys/devices/system/cpu/cpu1/cpufreq/scaling_max_freq' >> /system/etc/init.d/99lunar
 			fi
-			cd temp
-			dd if=/dev/block/$boot of=/$extsd/temp/tempboot.img
-			abootimg -x /$extsd/temp/tempboot.img
-			sed -i -e "s/gov.*//g" bootimg.cfg
-			sed -i -e "$ s/$/gov=$gov maxkhz=$maxkhz minkhz=$minkhz scheduler=$scheduler maxscroff=$maxscroff s2w=$s2w/g" bootimg.cfg
-			abootimg -u /$extsd/temp/tempboot.img -f /$extsd/temp/bootimg.cfg
-			dd if=/$extsd/temp/tempboot.img of=/dev/block/$boot
-			rm bootimg.cfg
-			rm initrd.img
-			rm zImage
-			if [ ! -d "/$extsd/lunar" ]; then
-			mkdir /$extsd/lunar
+			if [ -d "/sys/devices/system/cpu/cpu2/" ]; then
+			echo 'echo "'$gov'" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_governor' >> /system/etc/init.d/99lunar
+			echo 'echo "'$minkhz'" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_min_freq' >> /system/etc/init.d/99lunar
+			echo 'echo "'$maxkhz'" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_max_freq' >> /system/etc/init.d/99lunar
 			fi
+			if [ -d "/sys/devices/system/cpu/cpu3/" ]; then
+			echo 'echo "'$gov'" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_governor' >> /system/etc/init.d/99lunar
+			echo 'echo "'$minkhz'" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_min_freq' >> /system/etc/init.d/99lunar
+			echo 'echo "'$maxkhz'" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_max_freq' >> /system/etc/init.d/99lunar
+			fi
+			if [ -e /sys/android_touch/sweep2wake ]; then
+			echo 'echo '$s2w'> /sys/android_touch/sweep2wake' >> /system/etc/init.d/99lunar
+			fi
+			chmod 755 /system/etc/init.d/99lunar
 			if [ ! -e /$extsd/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2".cfg ]; then
 			echo "gov="$gov "maxkhz="$maxkhz "minkhz="$minkhz "scheduler="$scheduler "maxscroff="$maxscroff "s2w="$s2w"" >> /sdcard2/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2".cfg
 			echo "Flashed new boot and created .cfg at"
@@ -215,13 +217,8 @@ read confirm
 			else
 			echo "Configuration already exists; aborting copy to /$extsd/lunar"
 			fi
-			rm tempboot.img
-			rm /data/dalvik-cache/*
-			echo "Rebooting to recovery....."
-			echo ".... to wipe Dalvik Cache & Cache"
-			echo "--wipe_cache" >> /cache/recovery/command
+			echo "Reboot to apply new settings"
 			echo "GoodBye!"
-			reboot recovery
 			;;
                 "2")
 			echo "Aborted push to system!"
