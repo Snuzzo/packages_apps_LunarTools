@@ -210,6 +210,9 @@ read confirm
 			echo 'echo '$s2w'> /sys/android_touch/sweep2wake' >> /system/etc/init.d/99lunar
 			fi
 			chmod 755 /system/etc/init.d/99lunar
+			if [ ! -d "/$extsd/lunar" ]; then
+			mkdir /$extsd/lunar
+			fi
 			if [ ! -e /$extsd/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2".cfg ]; then
 			echo "gov="$gov "maxkhz="$maxkhz "minkhz="$minkhz "scheduler="$scheduler "maxscroff="$maxscroff "s2w="$s2w"" >> /sdcard2/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2".cfg
 			echo "Flashed new boot and created .cfg at"
@@ -222,6 +225,9 @@ read confirm
 			;;
                 "2")
 			echo "Aborted push to system!"
+			if [ ! -d "/$extsd/lunar" ]; then
+			mkdir /$extsd/lunar
+			fi
 			if [ ! -e /$extsd/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2".cfg ]; then
 			echo "gov="$gov "maxkhz="$maxkhz "minkhz="$minkhz "scheduler="$scheduler "maxscroff="$maxscroff "s2w="$s2w"" >> /sdcard2/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2".cfg
 			echo "Created .cfg at"
