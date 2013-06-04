@@ -5,7 +5,32 @@
 boot=$(grep -i "boot" /proc/emmc | sed 's/.*boot\(.*\)<\/recovery.*/\1/' | sed 's/:[^:]*$//')
 recovery=$(grep -i "recovery" /proc/emmc | sed 's/.*boot\(.*\)<\/recovery.*/\1/' | sed 's/:[^:]*$//')
 hardware=$(grep -i "board=" /system/build.prop | sed "s/.*board=//" | cut -d" " -f1)
-extsd=$(grep "/devices/platform/msm_sdcc.3/mmc_host/mmc2" /system/etc/vold.fstab | sed 's/dev_mount //g' | sed 's/ .*//g')
+echo "Storage selection:"
+echo
+extsd=$(grep "/devices/platform/msm_sdcc." /system/etc/vold.fstab | sed 's/dev_mount //g' | sed 's/ .*//g')
+#Let's not rely on static values, we will get them from emmc hardware instead
+# Load text file lines into a bash array.
+OLD_IFS=$IFS
+IFS=$'\n'
+let line_counter=0
+for line in $extsd; do
+	let line_counter=$(($line_counter+1))
+	printf "${line_counter}) ${line}\n"
+done
+IFS=$OLD_IFS
+echo "Choose number selection[0 or 99 = exit]:"
+read input
+if [ "$input" == "0" ];then
+exit
+fi
+if [ "$input" == "99" ];then
+exit
+fi
+if [ "$input" -gt "$line_counter" ];then
+echo "Invalid selection: Aborting script"
+exit
+fi
+extsd=$(grep "/devices/platform/msm_sdcc." /system/etc/vold.fstab | sed 's/dev_mount //g' | sed 's/ .*//g' | head -n$input | tail -n1)
 #Let's not rely on static values, we will get them from emmc hardware instead
 echo "Max CPU Clock selection:"
 echo 
