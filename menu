@@ -238,11 +238,11 @@ read menu
 					reboot recovery
 					fi
 					if [ "$kerneltype" == "initd" ];then
-					gov=(grep -i "gov=" $file_chosen | sed "s/ /\n/g" | sed "s/gov=//g" | head -n1 | tail -n1)
-					maxkhz=(grep -i "maxkhz=" $file_chosen | sed "s/ /\n/g" | sed "s/maxkhz=//g" | head -n2 | tail -n1)
-					minkhz=(grep -i "minkhz=" $file_chosen | sed "s/ /\n/g" | sed "s/minkhz=//g" | head -n3 | tail -n1)
-					scheduler=(grep -i "scheduler=" $file_chosen | sed "s/ /\n/g" | sed "s/scheduler=//g" | head -n4 | tail -n1)
-					s2w=(grep -i "s2w=" $file_chosen | sed "s/ /\n/g" | sed "s/s2w=//g" | tail -n1)
+					gov=$(grep -i "gov=" $file_chosen | sed "s/ /\n/g" | sed "s/gov=//g" | head -n1 | tail -n1)
+					maxkhz=$(grep -i "maxkhz=" $file_chosen | sed "s/ /\n/g" | sed "s/maxkhz=//g" | head -n2 | tail -n1)
+					minkhz=$(grep -i "minkhz=" $file_chosen | sed "s/ /\n/g" | sed "s/minkhz=//g" | head -n3 | tail -n1)
+					scheduler=$(grep -i "scheduler=" $file_chosen | sed "s/ /\n/g" | sed "s/scheduler=//g" | head -n4 | tail -n1)
+					s2w=$(grep -i "s2w=" $file_chosen | sed "s/ /\n/g" | sed "s/s2w=//g" | tail -n1)
 					echo '#!/system/bin/sh' > /system/etc/init.d/99lunar
 					echo 'echo ''"'$scheduler'"' '> /sys/block/mmcblk0/queue/scheduler' >> /system/etc/init.d/99lunar
 					echo 'echo "'$gov'" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor' >> /system/etc/init.d/99lunar
@@ -264,10 +264,11 @@ read menu
 					echo 'echo "'$maxkhz'" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_max_freq' >> /system/etc/init.d/99lunar
 					fi
 					if [ -e /sys/android_touch/sweep2wake ]; then
-					echo 'echo '$s2w'> /sys/android_touch/sweep2wake' >> /system/etc/init.d/99lunar
+					echo 'echo '$s2w' > /sys/android_touch/sweep2wake' >> /system/etc/init.d/99lunar
 					fi
 					chmod 755 /system/etc/init.d/99lunar
 					fi
+					exit
 					;;
 				"2")
 					echo "Fine, I will be here when you get back :)"
