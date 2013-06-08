@@ -1,0 +1,5 @@
+#!/system/bin/sh
+unzip -e -o $file_chosen boot.img -d /$extsd/lunar/ 2>> lunardebug.log
+dd if=/$extsd/lunar/boot.img of=/dev/block/$boot 2>> lunardebug.log
+rm boot.img
+reboot recovery

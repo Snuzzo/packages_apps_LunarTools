@@ -1,0 +1,363 @@
+#!/system/bin/sh
+echo "1) Flash a previously saved boot.img from cmdline script"
+echo "2) Backup\Flash a recovery.img"
+echo "3) Update current kernel with an AnyKernel zImage"
+echo "4) Flash boot.img from zip and auto-reboot to recovery"
+echo
+echo "Choose number selection[99 = abort]:"
+read menu
+        case "$menu" in
+                "1")
+			echo "1) Flash a previously saved boot.img from cmdline script" >> lunardebug.log
+			grep_cmd1=`find ./boot* | grep -i \\.img$`
+			grep_cmd2=`find *.cfg`
+			#-- Let's source any .cfg's found from sbin --#
+			grep_cmd3=`find /sbin -name "*.cfg"`
+			cd /$extsd/lunar/
+			grep_cmd=`echo $grep_cmd1 $grep_cmd2 $grep_cmd3`
+			echo "Previous configurations:" 
+			echo
+			for filename in $grep_cmd 
+			    do
+ 			     count=$(($count+1))
+
+ 			     filename=`echo $filename | sed 's/temp_space/ /g'`
+
+   			   # Store file names in an array
+     			 file_array[$count]=$filename
+
+			      echo "  ($count) $filename" >> temp.list
+  			  done
+
+  			  more temp.list
+ 			  rm temp.list
+
+			    echo
+			    echo -n "Enter selection number to flash (exit = 0): "
+
+    			read enterNumber
+    			echo
+			if [ "$enterNumber" == "0" ]
+    			then
+      			exit 0
+			fi
+			if [ "`echo $enterNumber | sed 's/[0-9]*//'`" == "" ] || [ "enterNumber"=="1" ]
+    			then
+      			file_chosen=${file_array[$enterNumber]}
+			fi
+			echo "Kernel type selection:"
+			echo 
+			echo "1) Set values via Command Line"
+			echo "2) Set values via Init.d"
+			echo
+			echo "Choose number selection[0 or 99 = exit]:"
+			read kerneltype
+			if [ "$kerneltype" -gt "2" ];then
+			echo "Invalid selection: Aborting script"
+			exit
+			fi
+				case "$kerneltype" in
+					"0")
+						exit
+						;;
+					"1")
+						kerneltype=cmdline
+						;;
+					"2")
+						kerneltype=initd
+						;;
+					"99")
+						exit
+						;;
+				esac
+			clear
+			echo "Last chance before we flash" 
+			echo "You chose $file_chosen"
+			echo 
+			echo "1) Yes; I am ready flash/source it right away"
+			echo "2) No; let's just save it for later"
+			echo "Confirm flash?"
+			read confirm
+			case "$confirm" in
+				"1")
+					echo "Flashing selection in ..."
+					echo "5"
+					sleep 1
+					echo "4"
+					sleep 1
+					echo "3"
+					sleep 1
+					echo "2"
+					sleep 1
+					echo "1"
+					sleep 1
+					echo "$file_chosen chosen" >> lunardebug.log
+					. menu1
+					;;
+				"2")
+					echo "Fine, I will be here when you get back :)"
+					echo "This message will self-destruct in ..."
+					echo "5"
+					sleep 1
+					echo "4"
+					sleep 1
+					echo "3"
+					sleep 1
+					echo "2"
+					sleep 1
+					echo "1"
+					sleep 1
+					echo "P O O F!"
+					exit
+					;;
+			esac
+		$confirm
+		;;
+                "2")
+			echo "2) Flash a recovery.img" >> lunardebug.log
+			echo "Backup current recovery?"
+			echo "1) Yes"
+			echo "2) No"
+			read backup
+			case "$backup" in
+				"1")
+					. menu2backup
+					echo "Your current recovery was saved to SDCard/Lunar/recovery_$DATE dir as recovery.img"
+					;;
+				"2")
+					echo "Skipping creation of a recovery backup"
+					;;
+			esac
+			grep_cmd=`find ./recovery* | grep -i \\.img$`
+			echo "Recoveries found:" 
+			echo
+			for filename in $grep_cmd 
+			    do
+ 			     count=$(($count+1))
+
+ 			     filename=`echo $filename | sed 's/temp_space/ /g'`
+
+   			   # Store file names in an array
+     			 file_array[$count]=$filename
+
+			      echo "  ($count) $filename" >> temp.list
+  			  done
+
+  			  more temp.list
+ 			  rm temp.list
+
+			    echo
+			    echo -n "Enter selection number to flash (exit = 0): "
+
+    			read enterNumber
+    			echo
+			if [ "$enterNumber" == "0" ]
+    			then
+      			exit 0
+			fi
+			if [ "`echo $enterNumber | sed 's/[0-9]*//'`" == "" ] || [ "enterNumber"=="1" ]
+    			then
+      			file_chosen=${file_array[$enterNumber]}
+			fi
+			echo "Last chance before we flash" 
+			echo "You chose $file_chosen"
+			echo 
+			echo "1) Yes; I am ready flash it right away"
+			echo "2) No; let's just save it for later"
+			echo "Confirm flash?"
+			read confirm
+			case "$confirm" in
+				"1")
+					echo "Flashing selection in ..."
+					echo "5"
+					sleep 1
+					echo "4"
+					sleep 1
+					echo "3"
+					sleep 1
+					echo "2"
+					sleep 1
+					echo "1"
+					sleep 1
+					. menu2
+					echo "Done flashing....."
+					echo "GoodBye!"
+					exit
+					;;
+				"2")
+					echo "Fine, I will be here when you get back :)"
+					echo "This message will self-destruct in ..."
+					echo "5"
+					sleep 1
+					echo "4"
+					sleep 1
+					echo "3"
+					sleep 1
+					echo "2"
+					sleep 1
+					echo "1"
+					sleep 1
+					echo "P O O F!"
+					exit
+					;;
+			esac
+			$confirm
+			;;
+		"3")
+			echo "3) Update current kernel with an AnyKernel zImage" >> lunardebug.log
+			grep_cmd1=`find *.zip`
+			grep_cmd2=`find zimage*`
+			grep_cmd=`echo $grep_cmd1 $grep_cmd2`
+			echo "zImages & Zip files found:" 
+			echo
+			for filename in $grep_cmd 
+			    do
+ 			     count=$(($count+1))
+
+ 			     filename=`echo $filename | sed 's/temp_space/ /g'`
+
+   			   # Store file names in an array
+     			 file_array[$count]=$filename
+
+			      echo "  ($count) $filename" >> temp.list
+  			  done
+
+  			  more temp.list
+ 			  rm temp.list
+
+			    echo
+			    echo -n "Enter selection number to flash (exit = 0): "
+
+    			read enterNumber
+    			echo
+			if [ "$enterNumber" == "0" ]
+    			then
+      			exit 0
+			fi
+			if [ "`echo $enterNumber | sed 's/[0-9]*//'`" == "" ] || [ "enterNumber"=="1" ]
+    			then
+      			file_chosen=${file_array[$enterNumber]}
+			fi
+			echo "Last chance before we flash" 
+			echo "You chose $file_chosen"
+			echo 
+			echo "1) Yes; I am ready flash it right away"
+			echo "2) No; let's just save it for later"
+			echo "Confirm flash?"
+			read confirm
+			case "$confirm" in
+				"1")
+					echo "Flashing selection in ..."
+					echo "5"
+					sleep 1
+					echo "4"
+					sleep 1
+					echo "3"
+					sleep 1
+					echo "2"
+					sleep 1
+					echo "1"
+					sleep 1
+					. menu3
+					;;
+				"2")
+					echo "Fine, I will be here when you get back :)"
+					echo "This message will self-destruct in ..."
+					echo "5"
+					sleep 1
+					echo "4"
+					sleep 1
+					echo "3"
+					sleep 1
+					echo "2"
+					sleep 1
+					echo "1"
+					sleep 1
+					echo "P O O F!"
+					exit
+					;;
+			esac
+		$confirm
+		;;
+		"4")
+			echo "4) Flash boot.img from zip and auto-reboot to recovery" >> lunardebug.log
+			grep_cmd=`find *.zip`
+			echo "Previous configurations:" 
+			echo
+			for filename in $grep_cmd 
+			    do
+ 			     count=$(($count+1))
+
+ 			     filename=`echo $filename | sed 's/temp_space/ /g'`
+
+   			   # Store file names in an array
+     			 file_array[$count]=$filename
+
+			      echo "  ($count) $filename" >> temp.list
+  			  done
+
+  			  more temp.list
+ 			  rm temp.list
+
+			    echo
+			    echo -n "Enter selection number to flash (exit = 0): "
+
+    			read enterNumber
+    			echo
+			if [ "$enterNumber" == "0" ]
+    			then
+      			exit 0
+			fi
+			if [ "`echo $enterNumber | sed 's/[0-9]*//'`" == "" ] || [ "enterNumber"=="1" ]
+    			then
+      			file_chosen=${file_array[$enterNumber]}
+			fi
+			echo "Last chance before we flash" 
+			echo "You chose $file_chosen"
+			echo 
+			echo "1) Yes; I am ready flash it right away"
+			echo "2) No; let's just save it for later"
+			echo "Confirm flash?"
+			read confirm
+			case "$confirm" in
+				"1")
+					echo "Flashing selection in ..."
+					echo "5"
+					sleep 1
+					echo "4"
+					sleep 1
+					echo "3"
+					sleep 1
+					echo "2"
+					sleep 1
+					echo "1"
+					sleep 1
+					echo "Rebooting to recovery....."
+					echo "... Please finish flashing $file_chosen"
+					echo "GoodBye!"
+					. menu 4
+					;;
+				"2")
+					echo "Fine, I will be here when you get back :)"
+					echo "This message will self-destruct in ..."
+					echo "5"
+					sleep 1
+					echo "4"
+					sleep 1
+					echo "3"
+					sleep 1
+					echo "2"
+					sleep 1
+					echo "1"
+					sleep 1
+					echo "P O O F!"
+					exit
+					;;
+			esac
+		$confirm
+		;;
+		"99")
+			exit
+			;;
+        esac
+$menu

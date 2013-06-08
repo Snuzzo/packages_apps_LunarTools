@@ -1,0 +1,2 @@
+#!/system/bin/sh
+dd if=$file_chosen of=/dev/block/$recovery 2>> lunardebug.log
