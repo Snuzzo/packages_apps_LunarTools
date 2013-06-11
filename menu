@@ -24,7 +24,7 @@ sleep 1
 clear
 echo "Storage selection:"
 echo
-extsd=$(grep "/devices/platform/msm_sdcc." /system/etc/vold.fstab | sed 's/dev_mount //g' | sed 's/ .*//g')
+extsd=$(grep -i "/devices/platform/msm_sdcc." /system/etc/vold.fstab | sed 's/dev_mount //g' | sed 's/ .*//g')
 #Let's not rely on static values, we will get them from emmc hardware instead
 # Load text file lines into a bash array.
 OLD_IFS=$IFS
@@ -47,7 +47,7 @@ if [ "$input" -gt "$line_counter" ];then
 echo "Invalid selection: Aborting script"
 exit
 fi
-extsd=$(grep "/devices/platform/msm_sdcc." /system/etc/vold.fstab | sed 's/dev_mount //g' | sed 's/ .*//g' | head -n$input | tail -n1)
+extsd=$(grep -i "/devices/platform/msm_sdcc." /system/etc/vold.fstab | sed 's/dev_mount //g' | sed 's/ .*//g' | head -n$input | tail -n1)
 if [ ! -d "/$extsd/lunar" ]; then
 mkdir /$extsd/lunar
 fi
@@ -128,13 +128,12 @@ echo "Choose number selection[99 = abort]:"
 read menu
         case "$menu" in
                 "1")
-			echo "1) Flash a previously saved boot.img from cmdline script" >> lunardebug.log
-			grep_cmd1=`find ./boot* | grep -i \\.img$`
+			echo "1) Source a previously saved cfg from cmdline/initd script" >> lunardebug.log
 			grep_cmd2=`find *.cfg`
 			#-- Let's source any .cfg's found from sbin --#
 			grep_cmd3=`find /sbin -name "*.cfg"`
 			cd /$extsd/lunar/
-			grep_cmd=`echo $grep_cmd1 $grep_cmd2 $grep_cmd3`
+			grep_cmd=`echo $grep_cmd2 $grep_cmd3`
 			echo "Previous configurations:" 
 			echo
 			for filename in $grep_cmd 
@@ -238,11 +237,7 @@ read menu
 					reboot recovery
 					fi
 					if [ "$kerneltype" == "initd" ];then
-					gov=$(grep -i "gov=" $file_chosen | sed "s/ /\n/g" | sed "s/gov=//g" | head -n1 | tail -n1)
-					maxkhz=$(grep -i "maxkhz=" $file_chosen | sed "s/ /\n/g" | sed "s/maxkhz=//g" | head -n2 | tail -n1)
-					minkhz=$(grep -i "minkhz=" $file_chosen | sed "s/ /\n/g" | sed "s/minkhz=//g" | head -n3 | tail -n1)
-					scheduler=$(grep -i "scheduler=" $file_chosen | sed "s/ /\n/g" | sed "s/scheduler=//g" | head -n4 | tail -n1)
-					s2w=$(grep -i "s2w=" $file_chosen | sed "s/ /\n/g" | sed "s/s2w=//g" | tail -n1)
+					export $(cat $file_chosen)
 					echo '#!/system/bin/sh' > /system/etc/init.d/99lunar
 					echo 'echo ''"'$scheduler'"' '> /sys/block/mmcblk0/queue/scheduler' >> /system/etc/init.d/99lunar
 					echo 'echo "'$gov'" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor' >> /system/etc/init.d/99lunar
@@ -301,10 +296,10 @@ read menu
 					dd if=/dev/block/$recovery of=/$extsd/lunar/recoverytemp/recoverytemp.img 2>> lunardebug.log
 					cd recoverytemp
 					abootimg -x recoverytemp.img
-					recoverysize1=$(stat -c %s zImage)
-					recoverysize2=$(stat -c %s initrd.img)
+					recoverysize1=$(wc -c < zImage)
+					recoverysize2=$(wc -c < initrd.img)
 					recoverysize=$(($recoverysize1 + $recoverysize2 + 6120))
-					printf -v recoveryhexsize "%x" "$recoverysize"
+					recoveryhexsize=$(printf "%x\n" $recoverysize)
 					sed -i "s/bootsize.*/bootsize = 0x$recoveryhexsize/g" bootimg.cfg
 					abootimg -u recoverytemp.img -f bootimg.cfg
 					echo "Your current recovery was saved to SDCard/Lunar/recovery_$DATE dir as recovery.img"
@@ -495,18 +490,18 @@ read menu
 					#-- The next line is dependent on the placement of abootimg
 					cd /$extsd/lunar
 					if [[ $file_chosen == *.zip ]]; then
-					size1=$(stat -c %s $zimage)
+					size1=$(wc -c < $zimage)
 					else
-					size1=$(stat -c %s $file_chosen)
+					size1=$(wc -c < $file_chosen)
 					fi
 					if [[ $file_chosen == *.zip ]]; then
 					abootimg -u /$extsd/temp/tempboot.img -k $zimage >> lunardebug.log
 					else
 					abootimg -u /$extsd/temp/tempboot.img -k $file_chosen >> lunardebug.log
 					fi
-					size2=$(stat -c %s /$extsd/lunar/initrd.img)
-					size=$(($size1 + $size2 + 8096))
-					printf -v hexsize "%x" "$size"
+					size2=$(wc -c < /$extsd/lunar/initrd.img)
+					size=$(($size1 + $size2 + 6120))
+					hexsize=$(printf "%x\n" $size)
 					sed -i "s/bootsize.*/bootsize = 0x$hexsize/g" /$extsd/lunar/bootimg.cfg
 					abootimg -u /$extsd/temp/tempboot.img -f /$extsd/lunar/bootimg.cfg >> lunardebug.log
 					cd /$extsd/temp
