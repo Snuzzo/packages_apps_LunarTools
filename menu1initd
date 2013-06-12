@@ -1,26 +1,41 @@
 #!/system/bin/sh
+sh /system/bin/sysrw
 export $(cat $1)
 echo '#!/system/bin/sh' > /system/etc/init.d/99lunar
+echo 'cat /proc/sys/net/ipv4/tcp_available_congestion_control > /proc/sys/net/ipv4/tcp_allowed_congestion_control' >> /system/etc/init.d/99lunar
+echo 'echo '$tcpcong' > /proc/sys/net/ipv4/tcp_congestion_control' >> /system/etc/init.d/99lunar
 echo 'echo ''"'$scheduler'"' '> /sys/block/mmcblk0/queue/scheduler' >> /system/etc/init.d/99lunar
 echo 'echo "'$gov'" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor' >> /system/etc/init.d/99lunar
 echo 'echo "'$minkhz'" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq' >> /system/etc/init.d/99lunar
 echo 'echo "'$maxkhz'" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq' >> /system/etc/init.d/99lunar
+if [ -e /sys/devices/system/cpu/cpu0/cpufreq/screen_off_max_freq ]; then
+echo 'echo '$maxscroff' > /sys/devices/system/cpu/cpu0/cpufreq/screen_off_max_freq' >> /system/etc/init.d/99lunar
+fi
 if [ -d "/sys/devices/system/cpu/cpu1/" ]; then
 echo 'echo "'$gov'" > /sys/devices/system/cpu/cpu1/cpufreq/scaling_governor' >> /system/etc/init.d/99lunar
 echo 'echo "'$minkhz'" > /sys/devices/system/cpu/cpu1/cpufreq/scaling_min_freq' >> /system/etc/init.d/99lunar
 echo 'echo "'$maxkhz'" > /sys/devices/system/cpu/cpu1/cpufreq/scaling_max_freq' >> /system/etc/init.d/99lunar
+if [ -e /sys/devices/system/cpu/cpu1/cpufreq/screen_off_max_freq ]; then
+echo 'echo '$maxscroff' > /sys/devices/system/cpu/cpu0/cpufreq/screen_off_max_freq' >> /system/etc/init.d/99lunar
+fi
 fi
 if [ -d "/sys/devices/system/cpu/cpu2/" ]; then
 echo 'echo "'$gov'" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_governor' >> /system/etc/init.d/99lunar
 echo 'echo "'$minkhz'" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_min_freq' >> /system/etc/init.d/99lunar
 echo 'echo "'$maxkhz'" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_max_freq' >> /system/etc/init.d/99lunar
+if [ -e /sys/devices/system/cpu/cpu2/cpufreq/screen_off_max_freq ]; then
+echo 'echo '$maxscroff' > /sys/devices/system/cpu/cpu0/cpufreq/screen_off_max_freq' >> /system/etc/init.d/99lunar
+fi
 fi
 if [ -d "/sys/devices/system/cpu/cpu3/" ]; then
 echo 'echo "'$gov'" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_governor' >> /system/etc/init.d/99lunar
 echo 'echo "'$minkhz'" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_min_freq' >> /system/etc/init.d/99lunar
 echo 'echo "'$maxkhz'" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_max_freq' >> /system/etc/init.d/99lunar
+if [ -e /sys/devices/system/cpu/cpu3/cpufreq/screen_off_max_freq ]; then
+echo 'echo '$maxscroff' > /sys/devices/system/cpu/cpu0/cpufreq/screen_off_max_freq' >> /system/etc/init.d/99lunar
 fi
 if [ -e /sys/android_touch/sweep2wake ]; then
 echo 'echo '$s2w' > /sys/android_touch/sweep2wake' >> /system/etc/init.d/99lunar
 fi
 chmod 755 /system/etc/init.d/99lunar
+sh /system/bin/sysro
