@@ -1,0 +1,21 @@
+#!/system/bin/sh
+file_chosen=$(cat $1)
+boot=$2
+cd /data/local/tmp
+dd if=/dev/block/$boot of=/data/local/tmp/tempboot.img 2>> lunardebug.log
+abootimg -x /data/local/tmp/tempboot.img >> lunardebug.log
+sed -i -e "s/gov.*//g" /data/local/tmp/bootimg.cfg
+sed -i -e "$ s/$/$file_chosen/g" /data/local/tmp/bootimg.cfg
+cat /data/local/tmp/bootimg.cfg >> lunardebug.log
+abootimg -u /data/local/tmp/tempboot.img -f /data/local/tmp/bootimg.cfg >> lunardebug.log
+dd if=/data/local/tmp/tempboot.img of=/dev/block/$boot 2>> lunardebug.log
+rm /data/local/tmp/bootimg.cfg
+rm /data/local/tmp/initrd.img
+rm /data/local/tmp/zImage
+rm /data/local/tmp/tempboot.img
+rm /data/dalvik-cache/*
+echo "Rebooting to recovery....."
+echo ".... to wipe Dalvik Cache & Cache"
+echo "--wipe_cache" >> /cache/recovery/command
+echo "GoodBye!"
+reboot recovery

@@ -1,17 +1,15 @@
 #!/system/bin/sh
+cd /data/local/tmp
 mkdir recoverytemp
-dd if=/dev/block/$recovery of=/$extsd/lunar/recoverytemp/recoverytemp.img 2>> lunardebug.log
+dd if=/dev/block/$2 of=/data/local/tmp/recoverytemp/recoverytemp.img 2>> lunardebug.log
 cd recoverytemp
 abootimg -x recoverytemp.img
-recoverysize1=$(stat -c %s zImage)
-recoverysize2=$(stat -c %s initrd.img)
-recoverysize=$(($recoverysize1 + $recoverysize2 + 6120))
-printf -v recoveryhexsize "%x" "$recoverysize"
+recoveryhexsize=$(printf "%x\n" $(($(wc -c < zImage) + $(wc -c < initrd.img) + 6120)))
 sed -i "s/bootsize.*/bootsize = 0x$recoveryhexsize/g" bootimg.cfg
 abootimg -u recoverytemp.img -f bootimg.cfg
-cd ..
+cd /$extsd/lunar
 if [ ! -d "/$extsd/recovery_$DATE" ]; then
 mkdir recovery_$DATE
 fi
-mv ./recoverytemp/recoverytemp.img ./recovery_$DATE/recovery.img
+mv /data/local/tmp/recoverytemp/recoverytemp.img ./recovery_$DATE/recovery.img
 rm -r /$extsd/lunar/recoverytemp
