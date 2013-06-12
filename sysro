@@ -1,0 +1,4 @@
+#!/system/bin/sh
+system=$(grep -i "system" /proc/emmc | sed 's/:[^:]*$//')
+fstype=$(grep -i "system" /proc/mounts | sed "s/ ro.*//g" | sed "s/.*em //g")
+mount -o ro,remount -t $fstype /dev/block/$system /system
