@@ -1,5 +1,6 @@
 #!/system/bin/sh
 sh /system/bin/sysrw
+echo $1 >> /sdcard/lunar/lunardebug.log
 export $(cat $1)
 echo '#!/system/bin/sh' > /system/etc/init.d/99lunar
 echo 'cat /proc/sys/net/ipv4/tcp_available_congestion_control > /proc/sys/net/ipv4/tcp_allowed_congestion_control' >> /system/etc/init.d/99lunar

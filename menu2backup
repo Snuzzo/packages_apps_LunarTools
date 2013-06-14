@@ -1,15 +1,16 @@
 #!/system/bin/sh
+DATE=$(date +"%m%d%y")
+extsd=$(grep -i "/devices/platform/msm_sdcc.3/mmc_host/mmc2" /system/etc/vold.fstab | sed 's/dev_mount //g' | sed 's/ .*//g')
 cd /data/local/tmp
-mkdir recoverytemp
-dd if=/dev/block/$2 of=/data/local/tmp/recoverytemp/recoverytemp.img 2>> lunardebug.log
-cd recoverytemp
-abootimg -x recoverytemp.img
+echo "recovery backup" > /$extsd/lunar/lunardebug.log
+echo $1 >> /$extsd/lunar/lunardebug.log
+dd if=/dev/block/$1 of=/data/local/tmp/recovery.img 2>> /$extsd/lunar/lunardebug.log
+abootimg -x recovery.img >> /$extsd/lunar/lunardebug.log
 recoveryhexsize=$(printf "%x\n" $(($(wc -c < zImage) + $(wc -c < initrd.img) + 6120)))
 sed -i "s/bootsize.*/bootsize = 0x$recoveryhexsize/g" bootimg.cfg
-abootimg -u recoverytemp.img -f bootimg.cfg
-cd /$extsd/lunar
-if [ ! -d "/$extsd/recovery_$DATE" ]; then
-mkdir recovery_$DATE
+abootimg -u recovery.img -f bootimg.cfg
+if [ ! -d "/$extsd/lunar/recovery_$DATE" ]; then
+mkdir /$extsd/lunar/recovery_$DATE
 fi
-mv /data/local/tmp/recoverytemp/recoverytemp.img ./recovery_$DATE/recovery.img
-rm -r /$extsd/lunar/recoverytemp
+cp /data/local/tmp/recovery.img /$extsd/lunar/recovery_$DATE/recovery.img
+rm /data/local/tmp/*

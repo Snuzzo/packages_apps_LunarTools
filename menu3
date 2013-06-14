@@ -1,4 +1,7 @@
 #!/system/bin/sh
+file_chosen=$1
+boot=$2
+extsd=$(grep -i "/devices/platform/msm_sdcc.3/mmc_host/mmc2" /system/etc/vold.fstab | sed 's/dev_mount //g' | sed 's/ .*//g')
 echo $file_chosen >> lunardebug.log
 if [[ $file_chosen == *.zip ]]; then
 file_chosen=$(echo $file_chosen | sed -e "s|./|/$extsd/|")  
