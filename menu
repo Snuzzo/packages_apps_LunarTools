@@ -119,7 +119,7 @@ echo $configconfirm > lunardebug.log
 echo $currentrom > /$extsd/lunar/currentromconfig
 echo $currentrom >> lunardebug.log
 echo
-echo "1) Flash a previously saved boot.img from cmdline script"
+echo "1) Source a previously saved config from cmdline/initd script"
 echo "2) Backup\Flash a recovery.img"
 echo "3) Update current kernel with an AnyKernel zImage"
 echo "4) Flash boot.img from zip and auto-reboot to recovery"
@@ -237,6 +237,7 @@ read menu
 					reboot recovery
 					fi
 					if [ "$kerneltype" == "initd" ];then
+					sh /system/bin/sysrw
 					export $(cat $file_chosen)
 					echo '#!/system/bin/sh' > /system/etc/init.d/99lunar
 					echo 'echo ''"'$scheduler'"' '> /sys/block/mmcblk0/queue/scheduler' >> /system/etc/init.d/99lunar
@@ -263,6 +264,7 @@ read menu
 					fi
 					chmod 755 /system/etc/init.d/99lunar
 					fi
+					sh /system/bin/sysro
 					exit
 					;;
 				"2")
