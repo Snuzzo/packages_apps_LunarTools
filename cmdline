@@ -84,7 +84,6 @@ exit
 fi
 minkhz=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies | sed 's/ /\n/g' | sed '$d' | head -n 4 | head -n$input | tail -n1)
 clear
-if [ -e /sys/devices/system/cpu/cpu0/cpufreq/screen_off_max_freq ]; then
 echo "Max Screen Off CPU Clock selection:" 
 echo 
 frequencies=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies | sed 's/ /\n/g' | sed '$d' | tail -n+5 | head -n 8)
@@ -110,7 +109,6 @@ echo "Invalid selection: Aborting script"
 exit
 fi
 maxscroff=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies | sed 's/ /\n/g' | sed '$d' | tail -n+5 | head -n 8 | head -n$input | tail -n1)
-fi
 clear
 echo "Governor selection:"
 echo
@@ -163,11 +161,34 @@ echo "Invalid selection: Aborting script"
 exit
 fi
 scheduler=$(cat /sys/block/mmcblk0/queue/scheduler | sed 's/[[]//g' | sed 's/[]]//g' | sed 's/ /\n/g' | sed '$d' | sed 's/ //g' | head -n$input | tail -n1)
-if [ "$kerneltype" == "2" ];then
-scheduler=$(cat /sys/block/mmcblk0/queue/scheduler | sed 's/[[]//g' | sed 's/[]]//g' | sed "s/$scheduler/[$scheduler]/g")
-fi
 clear
-if [ -e /sys/android_touch/sweep2wake ]; then
+clear
+echo "TCP COngestion Control selection:"
+echo 
+tcpcong=$(cat /proc/sys/net/ipv4/tcp_available_congestion_control | sed 's/ /\n/g')
+# Load text file lines into a bash array.
+OLD_IFS=$IFS
+IFS=$'\n'
+let line_counter=0
+for line in $tcpcong; do
+	let line_counter=$(($line_counter+1))
+	printf "${line_counter}) ${line}\n"
+done
+IFS=$OLD_IFS
+echo "Choose number selection[0 or 99 = exit]:"
+read input
+if [ "$input" == "0" ];then
+exit
+fi
+if [ "$input" == "99" ];then
+exit
+fi
+if [ "$input" -gt "$line_counter" ];then
+echo "Invalid selection: Aborting script"
+exit
+fi
+tcpcong=$(cat /proc/sys/net/ipv4/tcp_available_congestion_control | sed 's/ /\n/g' | head -n$input | tail -n1)
+clear
 echo "Sweep2Wake selection:"
 echo 
 echo "1) Disable"
@@ -200,7 +221,6 @@ fi
 			exit
                         ;;
 	esac
-fi
 clear
 maxkhz2=$(echo $maxkhz | sed '$s/000$/mhz/')
 minkhz2=$(echo $minkhz | sed '$s/000$/mhz/')
@@ -215,6 +235,10 @@ read confirm
 	case "$confirm" in
 		"1")
 			clear
+			sh /system/bin/sysrw
+			echo '#!/system/bin/sh' > /system/etc/init.d/99lunar
+			echo 'cat /proc/sys/net/ipv4/tcp_available_congestion_control > /proc/sys/net/ipv4/tcp_allowed_congestion_control' >> /system/etc/init.d/99lunar
+			echo 'echo '$tcpcong' > /proc/sys/net/ipv4/tcp_congestion_control' >> /system/etc/init.d/99lunar
 			cd /$extsd
 			if [ ! -d "/temp" ]; then
 			#-- Checking if temp exists if not we will create it
@@ -234,9 +258,9 @@ read confirm
 			mkdir /$extsd/lunar
 			fi
 			if [ ! -e /$extsd/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2".cfg ]; then
-			echo "gov="$gov "maxkhz="$maxkhz "minkhz="$minkhz "scheduler="$scheduler "maxscroff="$maxscroff "s2w="$s2w"" >> /sdcard2/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2".cfg
+			echo "gov="$gov "maxkhz="$maxkhz "minkhz="$minkhz "scheduler="$scheduler "maxscroff="$maxscroff "s2w="$s2w" tcpcong="$tcpcong"" >> /$extsd/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2"_"$tcpcong".cfg
 			echo "Flashed new boot and created .cfg at"
-			echo "/$extsd/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2".cfg"
+			echo "/$extsd/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2"_"$tcpcong".cfg"
 			else
 			echo "Configuration already exists; aborting copy to /$extsd/lunar"
 			fi
@@ -251,9 +275,9 @@ read confirm
                 "2")
 			echo "Aborted push to system!"
 			if [ ! -e /$extsd/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2".cfg ]; then
-			echo "gov="$gov "maxkhz="$maxkhz "minkhz="$minkhz "scheduler="$scheduler "maxscroff="$maxscroff "s2w="$s2w"" >> /sdcard2/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2".cfg
+			echo "gov="$gov "maxkhz="$maxkhz "minkhz="$minkhz "scheduler="$scheduler "maxscroff="$maxscroff "s2w="$s2w" tcpcong="$tcpcong"" >> /$extsd/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2".cfg
 			echo "Created .cfg at"
-			echo "/$extsd/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2".cfg"
+			echo "/$extsd/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2"_"$tcpcong".cfg"
 			else
 			echo "Configuration already exists; aborting copy to /$extsd/lunar"
 			fi
