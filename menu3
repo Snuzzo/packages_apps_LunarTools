@@ -1,8 +1,9 @@
 #!/system/bin/sh
+sh /system/bin/sysrw
 file_chosen=$1
 boot=$2
 extsd=$(grep -i "/devices/platform/msm_sdcc.3/mmc_host/mmc2" /system/etc/vold.fstab | sed 's/dev_mount //g' | sed 's/ .*//g')
-zimage=$(echo $file_chosen | sed "s/[/]//g" | sed -e "s/.*nar//" | sed "s/^/zimage_/" | sed -e "s|.zip||")
+zimage=$(echo $file_chosen | sed "s/[/]//g" | sed -e "s/.*nar//" | sed "s/^/zimage/" | sed -e "s|.zip||")
 echo $file_chosen > /$extsd/lunar/lunardebug.log
 md51=$(md5sum $file_chosen | cut -d ' ' -f 1)
 md52=$(echo $file_chosen | sed -e "s|.zip|.md5|")
@@ -18,7 +19,7 @@ fi
 unzip -e -o $file_chosen lunarmenu/$zimage -d /data/local/tmp/ 2>> /$extsd/lunar/lunardebug.log
 unzip -e -o $file_chosen kernel/zImage -d /data/local/tmp/ 2>> /$extsd/lunar/lunardebug.log
 if [ -e /data/local/tmp/$zimage ]; then
-mv /data/local/tmp/$zimage /data/local/tmp/chosen_zimage
+cp /data/local/tmp/$zimage /data/local/tmp/chosen_zimage
 fi
 if [ -e /data/local/tmp/zImage ]; then
 mv /data/local/tmp/zImage /data/local/tmp/chosen_zimage
@@ -29,29 +30,40 @@ exit
 fi
 sum1=$(sha1sum /data/local/tmp/chosen_zimage | cut -d ' ' -f 1)
 mkdir /data/local/tmp/option3temp
+echo "Pulling current boot" >> /$extsd/lunar/lunardebug.log
 dd if=/dev/block/$boot of=/data/local/tmp/option3temp/tempboot.img 2>> /$extsd/lunar/lunardebug.log
+echo "$sum1 sha1sum of chosen zimage" >> /$extsd/lunar/lunardebug.log
 cd /data/local/tmp/option3temp
 abootimg -x /data/local/tmp/option3temp/tempboot.img >> /$extsd/lunar/lunardebug.log
 sum2=$(sha1sum /data/local/tmp/option3temp/zImage | cut -d ' ' -f 1)
+echo "$sum2 sha1sum of original zimage" >> /$extsd/lunar/lunardebug.log
 cp /data/local/tmp/option3temp/tempboot.img /$extsd/lunar/boot_last_known_good.img
 abootimg -u /data/local/tmp/option3temp/tempboot.img -k /data/local/tmp/chosen_zimage >> /$extsd/lunar/lunardebug.log
+echo "updated tempboot with chosen zimage" >> /$extsd/lunar/lunardebug.log
 hexsize=$(printf "%x\n" $(($(wc -c < /data/local/tmp/chosen_zimage) + $(wc -c < /data/local/tmp/option3temp/initrd.img) + 6120)))
 dd if=/data/local/tmp/option3temp/tempboot.img of=/dev/block/$boot 2>> /$extsd/lunar/lunardebug.log
+rm /data/local/tmp/option3temp/*
 dd if=/dev/block/$boot of=/data/local/tmp/option3temp/tempboot.img 2>> /$extsd/lunar/lunardebug.log
+echo "Flashed updated boot & pulled it again" >> /$extsd/lunar/lunardebug.log
 abootimg -x /data/local/tmp/option3temp/tempboot.img >> /$extsd/lunar/lunardebug.log
-sed -i "s/bootsize.*/bootsize = 0x$hexsize/g" /data/local/tmp/option3temp/bootimg.cfg
-abootimg -u /data/local/tmp/option3temp/tempboot.img -f /data/local/tmp/option3temp/bootimg.cfg
 sum3=$(sha1sum /data/local/tmp/option3temp/zImage | cut -d ' ' -f 1)
+echo "$sum3 sha1sum of flashed zimage" >> /$extsd/lunar/lunardebug.log
 if [ "$sum3" == "$sum1" ]; then
 echo "flashed ok" >> /$extsd/lunar/lunardebug.log
+sed -i "s/bootsize.*/bootsize = 0x$hexsize/g" /data/local/tmp/option3temp/bootimg.cfg
+abootimg -u /data/local/tmp/option3temp/tempboot.img -f /data/local/tmp/option3temp/bootimg.cfg
 cp /data/local/tmp/option3temp/tempboot.img /$extsd/lunar/boot_currentrom_chosenzip.img
 rm /$extsd/lunar/boot_last_known_good.img
-else
+fi
+if [ "$sum3" == "$sum2" ]; then
 echo "flash unsuccessful" >> /$extsd/lunar/lunardebug.log
 echo "restoring boot_last_known_good.img" >> /$extsd/lunar/lunardebug.log
 dd if=/$extsd/lunar/boot_last_known_good.img of=/dev/block/$boot 2>> /$extsd/lunar/lunardebug.log
 fi
 rm /data/dalvik-cache/*
+rm /cache/dalvik-cache/*
+rm -r /data/local/tmp/*
+sh /system/bin/sysro
 file_chosen=$(echo $file_chosen | sed -e "s|/$extsd/|/sdcard/|")
 echo "--update_package=$file_chosen" > /cache/recovery/command
 reboot recovery
