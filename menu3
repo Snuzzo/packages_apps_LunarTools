@@ -2,108 +2,56 @@
 file_chosen=$1
 boot=$2
 extsd=$(grep -i "/devices/platform/msm_sdcc.3/mmc_host/mmc2" /system/etc/vold.fstab | sed 's/dev_mount //g' | sed 's/ .*//g')
-echo $file_chosen >> lunardebug.log
-if [[ $file_chosen == *.zip ]]; then
-file_chosen=$(echo $file_chosen | sed -e "s|./|/$extsd/|")  
-zimage=$(echo $file_chosen | sed "s/^/zimage_/" | sed -e "s|.zip||")
+zimage=$(echo $file_chosen | sed "s/[/]//g" | sed -e "s/.*nar//" | sed "s/^/zimage_/" | sed -e "s|.zip||")
+echo $file_chosen > /$extsd/lunar/lunardebug.log
 md51=$(md5sum $file_chosen | cut -d ' ' -f 1)
 md52=$(echo $file_chosen | sed -e "s|.zip|.md5|")
 if [ -e $md52 ]; then
 md52=$(cat $md52 | cut -d ' ' -f 1)
 if [ "$md51" == "$md52" ]; then
-echo "Zip MD5 Checksum matches"
-echo "Zip MD5 Checksum matches" >> lunardebug.log
+echo "Zip MD5 Checksum matches" >> /$extsd/lunar/lunardebug.log
 else
-echo "MD5 checksum mismatch: Aborting script"
-echo "MD5 checksum mismatch: Aborting script" >> lunardebug.log
-exit
-fi 
-fi
-echo "Scanning zip file & Unzipping zImage"
-unzip -e -o $file_chosen lunarmenu/$zimage -d /$extsd/lunar/ 2>> lunardebug.log
-unzip -e -o $file_chosen kernel/zImage -d /$extsd/lunar/ 2>> lunardebug.log
-if [ -e zImage ]; then
-mv zImage $zimage
-fi
-if [ ! -e $zimage ]; then
-echo "Aborting script; is not a valid AnyKernel zip"
-echo "Aborting script; is not a valid AnyKernel zip" >> lunardebug.log
+echo "MD5 checksum mismatch: Aborting script" >> /$extsd/lunar/lunardebug.log
 exit
 fi
 fi
-if [[ $file_chosen == *.zip ]]; then
-sum1=$(sha1sum $zimage | cut -d ' ' -f 1)
-else
-sum1=$(sha1sum $file_chosen | cut -d ' ' -f 1)
+unzip -e -o $file_chosen lunarmenu/$zimage -d /data/local/tmp/ 2>> /$extsd/lunar/lunardebug.log
+unzip -e -o $file_chosen kernel/zImage -d /data/local/tmp/ 2>> /$extsd/lunar/lunardebug.log
+if [ -e /data/local/tmp/$zimage ]; then
+mv /data/local/tmp/$zimage /data/local/tmp/chosen_zimage
 fi
-if [ ! -d "/$extsd/temp" ]; then
-#-- Checking if temp exists if not we will create it
-mkdir /$extsd/temp
+if [ -e /data/local/tmp/zImage ]; then
+mv /data/local/tmp/zImage /data/local/tmp/chosen_zimage
 fi
-dd if=/dev/block/$boot of=/$extsd/temp/tempboot.img 2>> lunardebug.log
-abootimg -x /$extsd/temp/tempboot.img >> lunardebug.log
-sum2=$(sha1sum zImage | cut -d ' ' -f 1)
-cp /$extsd/temp/tempboot.img /$extsd/lunar/boot_last_known_good.img
-echo "Pulled a copy of your current boot.img to lunar/boot_last_known_good.img"
-#-- The next line is dependent on the placement of abootimg
-cd /$extsd/lunar
-if [[ $file_chosen == *.zip ]]; then
-size1=$(stat -c %s $zimage)
-else
-size1=$(stat -c %s $file_chosen)
+if [ ! -e /data/local/tmp/chosen_zimage ]; then
+echo "Aborting script; is not a valid AnyKernel zip" >> /$extsd/lunar/lunardebug.log
+exit
 fi
-if [[ $file_chosen == *.zip ]]; then
-abootimg -u /$extsd/temp/tempboot.img -k $zimage >> lunardebug.log
-else
-abootimg -u /$extsd/temp/tempboot.img -k $file_chosen >> lunardebug.log
-fi
-size2=$(stat -c %s /$extsd/lunar/initrd.img)
-size=$(($size1 + $size2 + 8096))
-printf -v hexsize "%x" "$size"
-sed -i "s/bootsize.*/bootsize = 0x$hexsize/g" /$extsd/lunar/bootimg.cfg
-abootimg -u /$extsd/temp/tempboot.img -f /$extsd/lunar/bootimg.cfg >> lunardebug.log
-cd /$extsd/temp
-dd if=/$extsd/temp/tempboot.img of=/dev/block/$boot 2>> lunardebug.log
-dd if=/dev/block/$boot of=/$extsd/temp/tempboot.img 2>> lunardebug.log
-abootimg -x /$extsd/temp/tempboot.img >> lunardebug.log
-sed -i "s/bootsize.*/bootsize = 0x$hexsize/g" bootimg.cfg
-abootimg -u /$extsd/temp/tempboot.img -f bootimg.cfg >> lunardebug.log
-sum3=$(sha1sum zImage | cut -d ' ' -f 1)
-if [[ $file_chosen == *.zip ]]; then
-echo "New zImage sha1sum is $sum1"
-else
-echo "$file_chosen sha1sum is $sum1"
-fi
-echo "Current zImage sha1sum is $sum2"
+sum1=$(sha1sum /data/local/tmp/chosen_zimage | cut -d ' ' -f 1)
+mkdir /data/local/tmp/option3temp
+dd if=/dev/block/$boot of=/data/local/tmp/option3temp/tempboot.img 2>> /$extsd/lunar/lunardebug.log
+cd /data/local/tmp/option3temp
+abootimg -x /data/local/tmp/option3temp/tempboot.img >> /$extsd/lunar/lunardebug.log
+sum2=$(sha1sum /data/local/tmp/option3temp/zImage | cut -d ' ' -f 1)
+cp /data/local/tmp/option3temp/tempboot.img /$extsd/lunar/boot_last_known_good.img
+abootimg -u /data/local/tmp/option3temp/tempboot.img -k /data/local/tmp/chosen_zimage >> /$extsd/lunar/lunardebug.log
+hexsize=$(printf "%x\n" $(($(wc -c < /data/local/tmp/chosen_zimage) + $(wc -c < /data/local/tmp/option3temp/initrd.img) + 6120)))
+dd if=/data/local/tmp/option3temp/tempboot.img of=/dev/block/$boot 2>> /$extsd/lunar/lunardebug.log
+dd if=/dev/block/$boot of=/data/local/tmp/option3temp/tempboot.img 2>> /$extsd/lunar/lunardebug.log
+abootimg -x /data/local/tmp/option3temp/tempboot.img >> /$extsd/lunar/lunardebug.log
+sed -i "s/bootsize.*/bootsize = 0x$hexsize/g" /data/local/tmp/option3temp/bootimg.cfg
+abootimg -u /data/local/tmp/option3temp/tempboot.img -f /data/local/tmp/option3temp/bootimg.cfg
+sum3=$(sha1sum /data/local/tmp/option3temp/zImage | cut -d ' ' -f 1)
 if [ "$sum3" == "$sum1" ]; then
-echo "flashed ok"
-if [[ $file_chosen == *.zip ]]; then
-currentboot=$(echo $zimage | sed -e "s|zimage|boot_"$currentrom"_|")
-else
-currentboot=$(echo $file_chosen | sed -e "s|zimage|boot_"$currentrom"_|")
-fi
-echo "Copy of your updated boot.img is at lunar/$currentboot.img"
-mv /$extsd/temp/tempboot.img /$extsd/lunar/$currentboot.img
+echo "flashed ok" >> /$extsd/lunar/lunardebug.log
+cp /data/local/tmp/option3temp/tempboot.img /$extsd/lunar/boot_currentrom_chosenzip.img
 rm /$extsd/lunar/boot_last_known_good.img
 else
-echo "flash unsuccessful"
-echo "restoring boot_last_known_good.img"
-dd if=/$extsd/lunar/boot_last_known_good.img of=/dev/block/$boot 2>> lunardebug.log
+echo "flash unsuccessful" >> /$extsd/lunar/lunardebug.log
+echo "restoring boot_last_known_good.img" >> /$extsd/lunar/lunardebug.log
+dd if=/$extsd/lunar/boot_last_known_good.img of=/dev/block/$boot 2>> /$extsd/lunar/lunardebug.log
 fi
-rm -r /$extsd/temp
-rm /$extsd/lunar/zImage
-rm /$extsd/lunar/initrd.img
-rm /$extsd/lunar/bootimg.cfg
-rm -r /data/dalvik-cache
-if [[ $file_chosen == *.zip ]]; then
+rm /data/dalvik-cache/*
 file_chosen=$(echo $file_chosen | sed -e "s|/$extsd/|/sdcard/|")
 echo "--update_package=$file_chosen" > /cache/recovery/command
-echo "Rebooting to recovery....." 
-echo "... to flash matching zip to finish installation"
-else
-echo "Rebooting to recovery....." 
-echo "... to wipe caches"
-fi
-echo "--wipe_cache" >> /cache/recovery/command
-echo "GoodBye!"
 reboot recovery
