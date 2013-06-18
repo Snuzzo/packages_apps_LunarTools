@@ -2,4 +2,5 @@
 extsd=$(grep -i "/devices/platform/msm_sdcc.3/mmc_host/mmc2" /system/etc/vold.fstab | sed 's/dev_mount //g' | sed 's/ .*//g')
 unzip -e -o $1 boot.img -d /data/local/tmp 2>> /$extsd/lunar/lunardebug.log
 dd if=/data/local/tmp/boot.img of=/dev/block/$2 2>> /$extsd/lunar/lunardebug.log
+rm -r /data/local/tmp/*
 reboot recovery

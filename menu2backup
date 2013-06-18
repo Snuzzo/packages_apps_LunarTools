@@ -13,4 +13,4 @@ if [ ! -d "/$extsd/lunar/recovery_$DATE" ]; then
 mkdir /$extsd/lunar/recovery_$DATE
 fi
 cp /data/local/tmp/recovery.img /$extsd/lunar/recovery_$DATE/recovery.img
-rm /data/local/tmp/*
+rm -r /data/local/tmp/*

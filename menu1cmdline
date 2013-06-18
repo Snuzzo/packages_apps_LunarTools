@@ -13,10 +13,7 @@ echo 'echo '$tcpcong' > /proc/sys/net/ipv4/tcp_congestion_control' >> /system/et
 cat /data/local/tmp/bootimg.cfg >> lunardebug.log
 abootimg -u /data/local/tmp/tempboot.img -f /data/local/tmp/bootimg.cfg >> lunardebug.log
 dd if=/data/local/tmp/tempboot.img of=/dev/block/$boot 2>> lunardebug.log
-rm /data/local/tmp/bootimg.cfg
-rm /data/local/tmp/initrd.img
-rm /data/local/tmp/zImage
-rm /data/local/tmp/tempboot.img
+rm -r /data/local/tmp/*
 rm /data/dalvik-cache/*
 echo "Rebooting to recovery....."
 echo ".... to wipe Dalvik Cache & Cache"
