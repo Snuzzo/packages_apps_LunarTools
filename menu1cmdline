@@ -15,6 +15,7 @@ abootimg -u /data/local/tmp/tempboot.img -f /data/local/tmp/bootimg.cfg >> lunar
 dd if=/data/local/tmp/tempboot.img of=/dev/block/$boot 2>> lunardebug.log
 rm -r /data/local/tmp/*
 rm /data/dalvik-cache/*
+rm /cache/dalvik-cache/*
 echo "Rebooting to recovery....."
 echo ".... to wipe Dalvik Cache & Cache"
 echo "--wipe_cache" >> /cache/recovery/command
