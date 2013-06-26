@@ -4,7 +4,7 @@
 # Kludgy hack to help with kernels
 echo "Storage selection:"
 echo
-extsd=$(grep "/devices/platform/msm_sdcc." /system/etc/vold.fstab | sed 's/dev_mount //g' | sed 's/ .*//g')
+extsd=$(grep -i "/devices/platform/msm_sdcc." /system/etc/vold.fstab | sed 's/dev_mount //g' | sed 's/ .*//g')
 #Let's not rely on static values, we will get them from emmc hardware instead
 # Load text file lines into a bash array.
 OLD_IFS=$IFS
@@ -240,6 +240,7 @@ read confirm
 			echo 'echo "'$maxkhz'" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_max_freq' >> /system/etc/init.d/99lunar
 			if [ -e /sys/devices/system/cpu/cpu0/cpufreq/screen_off_max_freq ]; then
 			echo 'echo '$maxscroff' > /sys/devices/system/cpu/cpu3/cpufreq/screen_off_max_freq' >> /system/etc/init.d/99lunar
+			fi
 			fi
 			if [ -e /sys/android_touch/sweep2wake ]; then
 			echo 'echo '$s2w' > /sys/android_touch/sweep2wake' >> /system/etc/init.d/99lunar

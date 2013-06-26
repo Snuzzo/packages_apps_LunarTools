@@ -84,7 +84,6 @@ exit
 fi
 minkhz=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies | sed 's/ /\n/g' | sed '$d' | head -n 4 | head -n$input | tail -n1)
 clear
-if [ -e /sys/devices/system/cpu/cpu0/cpufreq/screen_off_max_freq ]; then
 echo "Max Screen Off CPU Clock selection:" 
 echo 
 frequencies=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies | sed 's/ /\n/g' | sed '$d' | tail -n+5 | head -n 8)
@@ -110,7 +109,6 @@ echo "Invalid selection: Aborting script"
 exit
 fi
 maxscroff=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies | sed 's/ /\n/g' | sed '$d' | tail -n+5 | head -n 8 | head -n$input | tail -n1)
-fi
 clear
 echo "Governor selection:"
 echo
@@ -167,7 +165,6 @@ if [ "$kerneltype" == "2" ];then
 scheduler=$(cat /sys/block/mmcblk0/queue/scheduler | sed 's/[[]//g' | sed 's/[]]//g' | sed "s/$scheduler/[$scheduler]/g")
 fi
 clear
-if [ -e /sys/android_touch/sweep2wake ]; then
 echo "Sweep2Wake selection:"
 echo 
 echo "1) Disable"
@@ -200,7 +197,6 @@ fi
 			exit
                         ;;
 	esac
-fi
 clear
 maxkhz2=$(echo $maxkhz | sed '$s/000$/mhz/')
 minkhz2=$(echo $minkhz | sed '$s/000$/mhz/')
@@ -242,6 +238,7 @@ read confirm
 			fi
 			rm tempboot.img
 			rm /data/dalvik-cache/*
+			rm /cache/dalvik-cache/*
 			echo "Rebooting to recovery....."
 			echo ".... to wipe Dalvik Cache & Cache"
 			echo "--wipe_cache" >> /cache/recovery/command
