@@ -1,0 +1,118 @@
+#!/system/bin/sh
+#
+# dsixda was here - some original scripting was needed
+# Kludgy hack to help with kernels
+boot=$(grep -i "boot" /proc/emmc | sed 's/.*boot\(.*\)<\/recovery.*/\1/' | sed 's/:[^:]*$//')
+recovery=$(grep -i "recovery" /proc/emmc | sed 's/.*boot\(.*\)<\/recovery.*/\1/' | sed 's/:[^:]*$//')
+#Let's not rely on static values, we will get them from emmc hardware instead
+DATE=$(date +"%m%d%y")
+clear
+echo "Loading 	LunarMenu"
+sleep 1
+clear
+echo "Loading 		LunarMenu"
+sleep 1
+clear
+echo "Loading 			LunarMenu"
+sleep 1
+clear
+echo "Loading 				LunarMenu"
+sleep 1
+clear
+echo "Loading 					LunarMenu"
+sleep 1
+clear
+echo "Storage selection:"
+echo
+extsd=$(grep -i "/devices/platform/msm_sdcc." /system/etc/vold.fstab | sed 's/dev_mount //g' | sed 's/ .*//g')
+#Let's not rely on static values, we will get them from emmc hardware instead
+# Load text file lines into a bash array.
+OLD_IFS=$IFS
+IFS=$'\n'
+let line_counter=0
+for line in $extsd; do
+	let line_counter=$(($line_counter+1))
+	printf "${line_counter}) ${line}\n"
+done
+IFS=$OLD_IFS
+echo "Choose number selection[0 or 99 = exit]:"
+read input
+if [ "$input" == "0" ];then
+exit
+fi
+if [ "$input" == "99" ];then
+exit
+fi
+if [ "$input" -gt "$line_counter" ];then
+echo "Invalid selection: Aborting script"
+exit
+fi
+extsd=$(grep -i "/devices/platform/msm_sdcc." /system/etc/vold.fstab | sed 's/dev_mount //g' | sed 's/ .*//g' | head -n$input | tail -n1)
+if [ ! -d "/$extsd/lunar" ]; then
+mkdir /$extsd/lunar
+fi
+cd /$extsd/lunar
+#dd if=/dev/block/$recovery of=/$extsd/lunar/recoverytemp.img 2> /dev/null
+#abootimg -x recoverytemp.img > /dev/null
+#recoverysha1=$(sha1sum initrd.img | cut -d ' ' -f 1)
+#rm recoverytemp.img
+#rm zImage
+#rm bootimg.cfg
+#rm initrd.img
+currentrom1=$(grep -i "ro.aa.taskid=" /system/build.prop | sed "s/ro.aa.taskid=//g")
+currentrom3=$(grep -i "otaupdater.otaid=" /system/build.prop | sed "s/otaupdater.otaid=//g")
+currentrom5=$(grep -i "ro.goo.developerid=" /system/build.prop | sed "s/ro.goo.developerid=//g")
+currentrom7=$(grep -i "ro.cm.version=" /system/build.prop | sed "s/ro.cm.version=//g")
+currentrom8=$(grep -i "ro.build.version.release=" /system/build.prop | sed "s/ro.build.version.release=//g")
+if [ "$currentrom1" == "264016" ];then
+currentrom="Sense-3.6-OTA"
+fi
+if [ "$currentrom1" == "275361" ];then
+currentrom="Sense-3.6-Global"
+fi
+if [ "$currentrom1" == "311390" ];then
+currentrom="Sense-3.6-Global"
+fi
+if [ "$currentrom1" == "290923" ];then
+currentrom="Sense-3.6-Global_Sense4.X"
+fi
+if [ "$currentrom1" == "249167" ];then
+currentrom="Sense-3.6-Global_Sense4.X"
+fi
+if [ "$currentrom1" == "263510" ];then
+currentrom="Sense4.X"
+fi
+if [ "$currentrom3-xxx" != "-xxx" ]; then
+currentrom2=$(grep -i "otaupdater.otaver=" /system/build.prop | sed "s/otaupdater.otaver=//g")
+currentrom=$(echo "$currentrom3-v$currentrom2")
+fi
+if [ "$currentrom5-xxx" != "-xxx" ]; then
+currentrom4=$(grep -i "ro.goo.version=" /system/build.prop | sed "s/ro.goo.version=//g")
+currentrom=$(echo "$currentrom5-v$currentrom4")
+fi
+if [ "$currentrom7-xxx" != "-xxx" ]; then
+currentrom=$(echo "cm$currentrom7" | sed "s/-UNOFFICIAL//g" | sed "s/-vigor//g")
+fi
+currentrom=$(echo $(echo $currentrom | sed 's/[^a-zA-Z0-9]//g')-$currentrom8)
+echo $currentrom > /$extsd/lunar/currentromconfig
+if [ -e "/$extsd/lunar/currentromconfig" ]; then
+echo "Current rom is set to $currentrom"
+echo "is this correct?"
+echo "1) Yes"
+echo "2) No"
+echo
+echo "Choose number selection[99 = abort]:"
+read configconfirm
+if [ "$configconfirm" == "99" ]; then
+exit
+fi
+if [ "$configconfirm" == "1" ]; then
+echo
+else
+echo "Enter name of current rom [Aa-Zz|0-9] then press [ENTER]:"
+read currentrom
+currentrom=$(echo $currentrom | sed 's/[^a-zA-Z0-9]//g')
+fi
+fi
+echo $configconfirm > lunardebug.log
+. main $boot $recovery $DATE $extsd $currentrom
