@@ -63,6 +63,7 @@ currentrom1=$(grep -i "ro.aa.taskid=" /system/build.prop | sed "s/ro.aa.taskid=/
 currentrom3=$(grep -i "otaupdater.otaid=" /system/build.prop | sed "s/otaupdater.otaid=//g")
 currentrom5=$(grep -i "ro.goo.developerid=" /system/build.prop | sed "s/ro.goo.developerid=//g")
 currentrom7=$(grep -i "ro.cm.version=" /system/build.prop | sed "s/ro.cm.version=//g")
+currentrom9=$(grep -i "ro.aokp.version=" /system/build.prop | sed "s/ro.aokp.version=//g")
 currentrom8=$(grep -i "ro.build.version.release=" /system/build.prop | sed "s/ro.build.version.release=//g")
 if [ "$currentrom1" == "264016" ];then
 currentrom="Sense-3.6-OTA"
@@ -94,6 +95,9 @@ if [ "$currentrom7-xxx" != "-xxx" ]; then
 currentrom=$(echo "cm$currentrom7" | sed "s/-UNOFFICIAL//g" | sed "s/-vigor//g")
 fi
 currentrom=$(echo $(echo $currentrom | sed 's/[^a-zA-Z0-9]//g')-$currentrom8)
+if [ "$currentrom9-xxx" != "-xxx" ]; then
+currentrom=$(echo "$currentrom9-$currentrom8" | sed "s/_vigor//g" | sed "s/_unofficial//g")
+fi
 echo $currentrom > /$extsd/lunar/currentromconfig
 if [ -e "/$extsd/lunar/currentromconfig" ]; then
 echo "Current rom is set to $currentrom"
