@@ -42,10 +42,14 @@ read menu
  			  rm temp.list
 
 			    echo
-			    echo -n "Enter selection number to flash (exit = 0): "
+			    echo -n "Enter selection number to flash (exit = 0)(M|m = Main Menu): "
 
     			read enterNumber
     			echo
+			if [[ "$enterNumber" == "M" || "$enterNumber" == "m" ]]
+    			then
+			. main $boot $recovery $DATE $extsd $currentrom
+			fi
 			if [ "$enterNumber" == "0" ]
     			then
       			exit 0
@@ -161,10 +165,14 @@ read menu
  			  rm temp.list
 
 			    echo
-			    echo -n "Enter selection number to flash (exit = 0): "
+			    echo -n "Enter selection number to flash (exit = 0)(M|m = Main Menu): "
 
     			read enterNumber
     			echo
+			if [[ "$enterNumber" == "M" || "$enterNumber" == "m" ]]
+    			then
+			. main $boot $recovery $DATE $extsd $currentrom
+			fi
 			if [ "$enterNumber" == "0" ]
     			then
       			exit 0
@@ -239,10 +247,14 @@ read menu
  			  rm temp.list
 
 			    echo
-			    echo -n "Enter selection number to flash (exit = 0): "
+			    echo -n "Enter selection number to flash (exit = 0)(M|m = Main Menu): "
 
     			read enterNumber
     			echo
+			if [[ "$enterNumber" == "M" || "$enterNumber" == "m" ]]
+    			then
+			. main $boot $recovery $DATE $extsd $currentrom
+			fi
 			if [ "$enterNumber" == "0" ]
     			then
       			exit 0
@@ -314,10 +326,14 @@ read menu
  			  rm temp.list
 
 			    echo
-			    echo -n "Enter selection number to flash (exit = 0): "
+			    echo -n "Enter selection number to flash (exit = 0)(M|m = Main Menu): "
 
     			read enterNumber
     			echo
+			if [[ "$enterNumber" == "M" || "$enterNumber" == "m" ]]
+    			then
+			. main $boot $recovery $DATE $extsd $currentrom
+			fi
 			if [ "$enterNumber" == "0" ]
     			then
       			exit 0
