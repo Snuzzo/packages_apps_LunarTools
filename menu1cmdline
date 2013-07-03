@@ -5,7 +5,7 @@ cd /data/local/tmp
 dd if=/dev/block/$boot of=/data/local/tmp/tempboot.img 2>> lunardebug.log
 abootimg -x /data/local/tmp/tempboot.img >> lunardebug.log
 sed -i -e "s/gov.*//g" /data/local/tmp/bootimg.cfg
-sed -i -e "$ s/$/$file_chosen/g" /data/local/tmp/bootimg.cfg
+sed -i -e "$ s/$/ $file_chosen/g" /data/local/tmp/bootimg.cfg
 sed -i -e "s/tcpcong.*//g" /data/local/tmp/bootimg.cfg
 echo '#!/system/bin/sh' > /system/etc/init.d/99lunar
 echo 'cat /proc/sys/net/ipv4/tcp_available_congestion_control > /proc/sys/net/ipv4/tcp_allowed_congestion_control' >> /system/etc/init.d/99lunar
