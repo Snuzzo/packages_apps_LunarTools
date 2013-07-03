@@ -4,30 +4,7 @@
 # Kludgy hack to help with kernels
 echo "Storage selection:"
 echo
-extsd=$(grep -i "/devices/platform/msm_sdcc." /system/etc/vold.fstab | sed 's/dev_mount //g' | sed 's/ .*//g')
-#Let's not rely on static values, we will get them from emmc hardware instead
-# Load text file lines into a bash array.
-OLD_IFS=$IFS
-IFS=$'\n'
-let line_counter=0
-for line in $extsd; do
-	let line_counter=$(($line_counter+1))
-	printf "${line_counter}) ${line}\n"
-done
-IFS=$OLD_IFS
-echo "Choose number selection[0 or 99 = exit]:"
-read input
-if [ "$input" == "0" ];then
-exit
-fi
-if [ "$input" == "99" ];then
-exit
-fi
-if [ "$input" -gt "$line_counter" ];then
-echo "Invalid selection: Aborting script"
-exit
-fi
-extsd=$(grep "/devices/platform/msm_sdcc." /system/etc/vold.fstab | sed 's/dev_mount //g' | sed 's/ .*//g' | head -n$input | tail -n1)
+extsd=$(grep -i "/devices/platform/msm_sdcc.3" /system/etc/vold.fstab | sed 's/dev_mount //g' | sed 's/ .*//g')
 echo "Max CPU Clock selection:"
 echo 
 frequencies=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies | sed 's/ /\n/g' | sed '$d' | tail -n 5)
