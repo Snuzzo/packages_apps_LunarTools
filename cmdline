@@ -205,7 +205,7 @@ read confirm
 			mkdir /$extsd/lunar
 			fi
 			if [ ! -e /$extsd/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2".cfg ]; then
-			echo "gov="$gov "maxkhz="$maxkhz "minkhz="$minkhz "scheduler="$scheduler "maxscroff="$maxscroff "s2w="$s2w"" >> /sdcard2/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2".cfg
+			echo "gov="$gov "maxkhz="$maxkhz "minkhz="$minkhz "scheduler="$scheduler "maxscroff="$maxscroff "s2w="$s2w"" >> /$extsd/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2".cfg
 			echo "Flashed new boot and created .cfg at"
 			echo "/$extsd/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2".cfg"
 			else
@@ -223,7 +223,7 @@ read confirm
                 "2")
 			echo "Aborted push to system!"
 			if [ ! -e /$extsd/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2".cfg ]; then
-			echo "gov="$gov "maxkhz="$maxkhz "minkhz="$minkhz "scheduler="$scheduler "maxscroff="$maxscroff "s2w="$s2w"" >> /sdcard2/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2".cfg
+			echo "gov="$gov "maxkhz="$maxkhz "minkhz="$minkhz "scheduler="$scheduler "maxscroff="$maxscroff "s2w="$s2w"" >> /$extsd/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2".cfg
 			echo "Created .cfg at"
 			echo "/$extsd/lunar/"$gov"_"$maxkhz2"_"$minkhz2"_"$scheduler"_"$maxscroff2"_s2w"$s2w2".cfg"
 			else
