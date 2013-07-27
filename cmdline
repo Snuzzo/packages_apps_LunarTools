@@ -186,18 +186,13 @@ read confirm
 	case "$confirm" in
 		"1")
 			clear
-			cd /$extsd
-			if [ ! -d "/temp" ]; then
-			#-- Checking if temp exists if not we will create it
-			mkdir temp
-			fi
-			cd temp
-			dd if=/dev/block/$boot of=/$extsd/temp/tempboot.img
-			abootimg -x /$extsd/temp/tempboot.img
+			cd /data/local/tmp/
+			dd if=/dev/block/$boot of=/data/local/tmp/boot.img
+			abootimg -x /data/local/tmp/boot.img
 			sed -i -e "s/gov.*//g" bootimg.cfg
 			sed -i -e "$ s/$/ gov=$gov maxkhz=$maxkhz minkhz=$minkhz scheduler=$scheduler maxscroff=$maxscroff s2w=$s2w/g" bootimg.cfg
-			abootimg -u /$extsd/temp/tempboot.img -f /$extsd/temp/bootimg.cfg
-			dd if=/$extsd/temp/tempboot.img of=/dev/block/$boot
+			abootimg -u /data/local/tmp/boot.img -f /data/local/tmp/bootimg.cfg
+			dd if=/data/local/tmp/boot.img of=/dev/block/$boot
 			rm bootimg.cfg
 			rm initrd.img
 			rm zImage
@@ -211,7 +206,7 @@ read confirm
 			else
 			echo "Configuration already exists; aborting copy to /$extsd/lunar"
 			fi
-			rm tempboot.img
+			rm /data/local/tmp/*
 			rm /data/dalvik-cache/*
 			rm /cache/dalvik-cache/*
 			echo "Rebooting to recovery....."
