@@ -24,7 +24,7 @@ sleep 1
 clear
 echo "Storage selection:"
 echo
-extsd=$(grep -i "/devices/platform/msm_sdcc.3" /system/etc/vold.fstab | sed 's/dev_mount //g' | sed 's/ .*//g')
+extsd="/storage/sdcard1"
 if [ ! -d "/$extsd/lunar" ]; then
 mkdir /$extsd/lunar
 fi

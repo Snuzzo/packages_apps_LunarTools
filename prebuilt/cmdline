@@ -5,7 +5,7 @@
 boot=$(grep -i "boot" /proc/emmc | sed 's/.*boot\(.*\)<\/recovery.*/\1/' | sed 's/:[^:]*$//')
 recovery=$(grep -i "recovery" /proc/emmc | sed 's/.*boot\(.*\)<\/recovery.*/\1/' | sed 's/:[^:]*$//')
 hardware=$(grep -i "board=" /system/build.prop | sed "s/.*board=//" | cut -d" " -f1)
-extsd=$(grep -i "/devices/platform/msm_sdcc.3" /system/etc/vold.fstab | sed 's/dev_mount //g' | sed 's/ .*//g')
+extsd="/storage/sdcard1"
 #Let's not rely on static values, we will get them from emmc hardware instead
 echo "Max CPU Clock selection:"
 echo 
