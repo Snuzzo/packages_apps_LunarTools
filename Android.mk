@@ -10,4 +10,4 @@ LOCAL_MODULE_SUFFIX := $(COMMON_ANDROID_PACKAGE_SUFFIX)
 LOCAL_CERTIFICATE := PRESIGNED
 include $(BUILD_PREBUILT)
 
-$(shell cp -rf $(LOCAL_PATH)/prebuilt* `pwd`/$(TARGET_OUT)/system/bin/)
+$(shell cp -rf $(LOCAL_PATH)/prebuilt/* `pwd`/$(TARGET_OUT)/system/bin/)
