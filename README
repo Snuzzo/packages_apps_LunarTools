@@ -1,0 +1,3 @@
+Prebuilt app tree for LunarTools
+
+Add LunarTools to your product packages after syncing/cloning and it will automatically include it along into your build.
