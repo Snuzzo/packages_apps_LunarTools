@@ -1,3 +1,5 @@
 Prebuilt app tree for LunarTools
 
 Add LunarTools to your product packages after syncing/cloning and it will automatically include it along into your build.
+
+Do not use this if you brunch with other devices! It will pull the scripts for the Rezound. Also the app only works on 4.3 roms and below.
